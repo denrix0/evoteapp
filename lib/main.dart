@@ -59,14 +59,8 @@ class _AuthenticatePageState extends State<AuthenticatePage>
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          // title: LinearProgressIndicator(
-          //   value: _tabCtrl.index.toDouble(),
-          //   minHeight: 30,
-          //   valueColor: const AlwaysStoppedAnimation<Color>(Colors.lightBlue),
-          // ),
         ),
         body: SingleChildScrollView(
-          // physics: NeverScrollableScrollPhysics(),
           child: Column(children: [
             SizedBox(
               height: MediaQuery.of(context).size.height - 200,
@@ -120,7 +114,6 @@ class _AuthenticatePageState extends State<AuthenticatePage>
   }
 
   @override
-  // TODO: implement wantKeepAlive
   bool get wantKeepAlive => true;
 }
 

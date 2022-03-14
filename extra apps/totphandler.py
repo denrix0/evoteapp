@@ -1,9 +1,9 @@
 # note to refer https://github.com/pyauth/pyotp and https://datatracker.ietf.org/doc/html/rfc6238#section-5 at time of deployment
 import pyotp
 import os
-import tokengen
+import voterid.qrgen as qrgen
 
-secrets_file = "secret.txt"
+secrets_file = "secrets.txt"
 secret = None
 
 
@@ -26,5 +26,6 @@ qr_string = pyotp.totp.TOTP(secret).provisioning_uri(
     name="abrah@ham.com", issuer_name="Evot app"
 )
 
-tokengen.show_qr(qr_string)
+qr = qrgen.QRWindow()
+qr.show_qr(qr_string)
 totp = pyotp.TOTP(secret)

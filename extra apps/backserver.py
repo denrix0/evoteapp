@@ -1,6 +1,5 @@
 from flask import Flask, jsonify, request
 from flask_restful import Resource, Api
-from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 
 import os
@@ -8,8 +7,9 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLURI")
 api = Api(app)
+
+# SQL
 
 # Home
 class Home(Resource):
@@ -18,27 +18,33 @@ class Home(Resource):
 
 
 # Authenticate User's PIN
-class PinAuth:
+class PinAuth(Resource):
     def post(self):
-        return jsonify({"data": "pin"})
+        return jsonify({"data": "pin_verify"})
 
 
 # Authenticate User's TOTP
-class OTPAuth:
+class OTPAuth(Resource):
     def post(self):
-        return jsonify({"data": "otp"})
+        return jsonify({"data": "otp_verify"})
 
 
 # Authenticate User's Govt ID
-class GovtAuth:
+class GovtAuth(Resource):
     def post(self):
-        return jsonify({"data": "gov"})
+        return jsonify({"data": "gov_verify"})
+
+
+# Create user
+class CreateUser(Resource):
+    def post(self):
+        return jsonify({"data": "success"})
 
 
 api.add_resource(Home, "/")
-api.add_resource(PinAuth, "/pin")
-api.add_resource(OTPAuth, "/otp")
-api.add_resource(GovtAuth, "/gov")
+api.add_resource(PinAuth, "/pin_verify")
+api.add_resource(OTPAuth, "/otp_verify")
+api.add_resource(GovtAuth, "/gov_verify")
 
 
 if __name__ == "__main__":

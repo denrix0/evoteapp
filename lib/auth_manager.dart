@@ -1,7 +1,11 @@
 import 'package:local_auth/local_auth.dart';
+import 'auth_api_wrapper.dart';
 
 class AuthManager {
   LocalAuthentication localAuth = LocalAuthentication();
+
+  static AuthAPI authApi = AuthAPI();
+
   static bool didAuthenticateBio = false;
   static bool didAuthenticatePin = false;
   static bool didAuthenticateOtp = false;
@@ -40,14 +44,15 @@ class AuthManager {
     return didAuthenticateGid;
   }
 
-  bool getOtpAuth(String _otp) {
-    String _gotOtp = '666';
-
-    if (_otp == _gotOtp) {
-      didAuthenticateOtp = true;
-    }
-
-    return didAuthenticateOtp;
+  Future<void> getOtpAuth(String _otp) async {
+    print(await authApi.sendApiRequest());
+    // String _gotOtp = '666';
+    //
+    // if (_otp == _gotOtp) {
+    //   didAuthenticateOtp = true;
+    // }
+    //
+    // return didAuthenticateOtp;
   }
 
 

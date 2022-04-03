@@ -37,6 +37,7 @@ class _AuthenticatePageState extends State<AuthenticatePage>
   List<StatefulWidget> pageItems = const [
     BiometricsAuth(),
     OTPAuth(),
+    VoterIDAuth(),
     PinAuth(),
     GovtAuth(),
     FinishAuth()
@@ -140,7 +141,7 @@ class _BiometricsAuthState extends State<BiometricsAuth> {
               Padding(
                 padding: const EdgeInsets.all(32.0),
                 child: Text(
-                  'Biometric Authentication',
+                  'Biometrics',
                   style: TextStyles.textTitleStyle(),
                   textAlign: TextAlign.center,
                 ),
@@ -196,7 +197,7 @@ class _OTPAuthState extends State<OTPAuth> {
         Padding(
           padding: const EdgeInsets.all(32.0),
           child: Text(
-            'OTP Authentication',
+            'TOTP',
             style: TextStyles.textTitleStyle(),
             textAlign: TextAlign.center,
           ),
@@ -208,6 +209,57 @@ class _OTPAuthState extends State<OTPAuth> {
                 const BoxDecoration(shape: BoxShape.circle, color: Colors.grey),
             child: Icon(
               Icons.check,
+              size: MediaQuery.of(context).size.width - 160,
+            ),
+          ),
+        ),
+        Container(
+          padding: const EdgeInsets.all(16.0),
+          width: MediaQuery.of(context).size.width - 50,
+          child: TextField(
+            controller: _textCtrl,
+            decoration: const InputDecoration(
+                border: OutlineInputBorder(borderSide: BorderSide())),
+          ),
+        ),
+        TextButton(onPressed: () {
+          authManager.getOtpAuth('1000');
+        }, child: const Text("Verify Code"))
+      ],
+    );
+  }
+}
+
+class VoterIDAuth extends StatefulWidget {
+  const VoterIDAuth({Key? key}) : super(key: key);
+
+  @override
+  _VoterIDAuthState createState() => _VoterIDAuthState();
+}
+
+class _VoterIDAuthState extends State<VoterIDAuth> {
+  final TextEditingController _textCtrl = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Text(
+            'Voter ID',
+            style: TextStyles.textTitleStyle(),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(64.0),
+          child: Container(
+            decoration:
+            const BoxDecoration(shape: BoxShape.circle, color: Colors.grey),
+            child: Icon(
+              Icons.credit_card,
               size: MediaQuery.of(context).size.width - 160,
             ),
           ),
@@ -245,7 +297,7 @@ class _PinAuthState extends State<PinAuth> {
         Padding(
           padding: const EdgeInsets.all(32.0),
           child: Text(
-            'PIN Authentication',
+            'PIN',
             style: TextStyles.textTitleStyle(),
             textAlign: TextAlign.center,
           ),
@@ -294,7 +346,7 @@ class _GovtAuthState extends State<GovtAuth> {
         Padding(
           padding: const EdgeInsets.all(32.0),
           child: Text(
-            'ID Authentication',
+            'Government ID',
             style: TextStyles.textTitleStyle(),
             textAlign: TextAlign.center,
           ),

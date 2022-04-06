@@ -4,7 +4,7 @@ import 'auth_api_wrapper.dart';
 class AuthManager {
   LocalAuthentication localAuth = LocalAuthentication();
 
-  static AuthAPI authApi = AuthAPI();
+  static AuthAPI authApi = AuthAPI(host: "192.168.1.34");
 
   static bool didAuthenticateBio = false;
   static bool didAuthenticatePin = false;
@@ -15,10 +15,8 @@ class AuthManager {
     bool _hasAuth = await localAuth.canCheckBiometrics;
 
     if (_hasAuth && !didAuthenticateBio) {
-      didAuthenticateBio =
-      await localAuth.authenticate(
-          localizedReason: 'Authenticate',
-          biometricOnly: true);
+      didAuthenticateBio = await localAuth.authenticate(
+          localizedReason: 'Authenticate', biometricOnly: true);
     }
 
     return didAuthenticateBio;
@@ -45,7 +43,7 @@ class AuthManager {
   }
 
   Future<void> getOtpAuth(String _otp) async {
-    print(await authApi.sendApiRequest());
+    // print(await authApi.sendApiRequest());
     // String _gotOtp = '666';
     //
     // if (_otp == _gotOtp) {
@@ -54,6 +52,4 @@ class AuthManager {
     //
     // return didAuthenticateOtp;
   }
-
-
 }

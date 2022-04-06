@@ -45,3 +45,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Python Venv and Brownie
+/serverside/votestorage/build
+/serverside/Lib
+/serverside/Scripts
+/serverside/Include
+/serverside/pyvenv.cfg

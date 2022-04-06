@@ -5,7 +5,7 @@ sample text
 - Flutter + Android Studio
 - Redis
 - Node + React
-- Python + Flask + Brownie
+- Python + Flask + Brownie + Gunicorn
 - Solidity
 ## Data on Server
 1. Permanent

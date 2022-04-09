@@ -1,6 +1,7 @@
 from enum import Enum
+from database_handling.sql_handling import fetch_entry
 
-import cryptography
+import crypto_functions as cryp
 
 
 class Status(Enum):
@@ -8,12 +9,18 @@ class Status(Enum):
     Fail = 1
 
 
-def generate_keypair():
-    pass
-
-
 def authenticate_login(id, pin):
-    if str(id) == "1234":
-        if str(pin) == "0000":
-            return Status.Success
-    return Status.Fail
+    entry = fetch_entry(id=id)
+
+    response = Status.Fail
+    message = "None"
+
+    if entry is not None:
+        if cryp.verify_pin(pin, hashed_pin=entry.pin, salt=entry.salt):
+            response = Status.Success
+        else:
+            message = "Incorrect PIN"
+    else:
+        message = "User doesn't exist"
+
+    return response, message

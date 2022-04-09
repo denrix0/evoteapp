@@ -3,7 +3,7 @@ import secrets
 import tkinter
 import os
 
-from totpclient import get_totp_token
+from voterid.totpclient import get_totp_token
 
 
 class QRWindow:

@@ -31,7 +31,7 @@ contract VoteStorage {
         _;
     }
 
-    // Option Details
+    // Vote Details
 
     mapping(string => uint256) optionToVoteCount;
     mapping(string => bool) optionExists;
@@ -64,36 +64,5 @@ contract VoteStorage {
             optionExists[options[i]] = false;
         }
         delete options;
-    }
-
-    // Voter Details
-
-    struct User {
-        string pin;
-        string salt;
-    }
-
-    mapping(string => User) private users;
-
-    function setUser(
-        string memory _id,
-        string memory _pin,
-        string memory _salt
-    ) public onlyOwner {
-        users[_id].pin = _pin;
-        users[_id].salt = _salt;
-    }
-
-    function getUser(string memory _id)
-        public
-        view
-        checkNodeAuth
-        returns (User memory)
-    {
-        return users[_id];
-    }
-
-    function deleteUser(string memory _id) public onlyOwner {
-        delete users[_id];
     }
 }

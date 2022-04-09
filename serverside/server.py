@@ -1,14 +1,24 @@
 from flask import Flask, jsonify, request
-from flask_restful import Resource, Api, reqparse, abort
+from flask_restful import Resource, Api, reqparse
+from database_handling.mongodb_wrapper import MongoAPI
+from database_handling.sql_handling import db, add_entry, fetch_entry, delete_entry
+from crypto_functions import generate_jwt, token_time
 
 import authentication
 import config
-import json
 
 
 app = Flask(__name__)
 api = Api(app)
+mongo_api = MongoAPI()
 
+app.config["SQLALCHEMY_DATABASE_URI"] = config.SQL_URI
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.secret_key = config.SQL_SECRET_KEY
+
+db.init_app(app)
+with app.app_context():
+    db.create_all()
 
 # Home
 class Home(Resource):
@@ -29,17 +39,18 @@ class Login(Resource):
         pin = argsr["pin"]
 
         # Validate Credentials
-        auth = authentication.authenticate_login(id, pin)
+        auth, message = authentication.authenticate_login(id, pin)
 
-        if auth == authentication.Status.Success:
+        if auth is authentication.Status.Success:
             response = {
-                "jwt": "wow text",
-                "req_methods": ["meth 1", "meth 2", "meth 3"],
+                "jwt": generate_jwt(),
+                "req_methods": config.REQUESTED_METHODS,
                 "enc_key": "big key",
-                "expiry": "1/1/1970",
+                "expiry": token_time(),
             }
+
         else:
-            response = {"error_type": "auth_failed", "message": "Login Failed"}
+            response = {"error_type": "auth_failed", "message": message}
 
         # JSON to return
         return jsonify(response)
@@ -59,10 +70,7 @@ class Auth(Resource):
 
 class GetVoteForm(Resource):
     def get(self):
-        voting_form = config.basedir / "data" / "voting_form.json"
-        with voting_form.open() as f:
-            form_data = json.load(f)
-        return jsonify(form_data)
+        return jsonify(mongo_api.fetch_voting_form())
 
 
 class SubmitVote(Resource):
@@ -78,6 +86,11 @@ class SubmitVote(Resource):
         )
 
 
+class TempUniqueIDAuth(Resource):
+    def post(self):
+        return jsonify({"works": "yes"})
+
+
 api.add_resource(Home, "/")
 api.add_resource(Auth, "/auth_verify")
 api.add_resource(Login, "/login")
@@ -86,4 +99,4 @@ api.add_resource(SubmitVote, "/submit")
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="192.168.1.34")
+    app.run(debug=True, host=config.SERVER_URI, port=config.SERVER_PORT)

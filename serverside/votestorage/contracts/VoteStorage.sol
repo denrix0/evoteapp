@@ -7,6 +7,7 @@ contract VoteStorage {
 
     constructor() {
         owner = msg.sender;
+        authNodes[msg.sender] = true;
     }
 
     modifier onlyOwner() {

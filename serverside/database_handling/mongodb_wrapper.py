@@ -5,73 +5,74 @@ class MongoAPI:
     def __init__(self):
         mongoclient = MongoClient("localhost", 27017)
 
-        self.db = mongoclient["evote_configuration"]
-        self.voting_form = self.db["voting_form"]
-        self.vote_config = self.db["vote_config"]
+        db = mongoclient["evote_db"]
+        self.user_data = db["user_data"]
 
-        if "evote_configuration" not in mongoclient.list_database_names():
-            self.set_defaults()
-
-    def set_defaults(self):
-        config_data = {
-            "req_methods": ["totp1", "totp2", "uid"],
-            "expiry": 600,
-        }
-
-        form_data = {
-            "prompt": "Sample Prompt",
-            "options": ["Option 1", "Option 2", "Option 3", "Option 4"],
-        }
-
-        self.vote_config.insert_one(config_data)
-        self.voting_form.insert_one(form_data)
-
-    def set_vote_form(
-        self,
-        prompt=None,
-        options=None,
+    def set_user_data(
+        self, id, jwt=None, msg_key=None, master_token=None, auth_tokens={}
     ):
-        default_values = self.fetch_voting_form()
-        if not prompt:
-            prompt = default_values["prompt"]
-        if not options:
-            options = default_values["options"]
+        """
+        msg_key = string
+        master_token = string
+        auth_tokens = {'<method>': '<token>', ...}
+        """
+        defaults = self.fetch_user_data(id=id)
 
-        data = {"prompt": prompt, "options": options}
+        data = {
+            "user_id": id,
+            "jwt": "",
+            "auth_tokens": {},
+            "master_token": "",
+            "msg_key": "",
+        }
 
-        id = self.voting_form.find_one()["_id"]
-        self.voting_form.update_many({"_id": id}, {"$set": data})
+        if defaults:
+            for key in data.keys():
+                try:
+                    data[key] = defaults[key]
+                except KeyError:
+                    pass
 
-    def set_vote_config(self, req_methods=None, expiry=None):
-        if not req_methods:
-            req_methods = self.fetch_vote_config()
-        if not expiry:
-            expiry = self.fetch_vote_config("expiry")
+        if jwt:
+            data["jwt"] = jwt
 
-        data = {"req_methods": req_methods, "expiry": expiry}
+        if msg_key:
+            data["msg_key"] = msg_key
 
-        id = self.vote_config.find_one()["_id"]
-        self.vote_config.update_many({"_id": id}, {"$set": data})
+        if master_token:
+            data["master_token"] = master_token
 
-    def fetch_voting_form(self):
-        form = self.voting_form.find_one()
-        form.pop("_id")
+        if auth_tokens:
+            for k, v in auth_tokens.items():
+                data["auth_tokens"][k] = v
 
-        return form
+        self.user_data.update_one({"user_id": id}, {"$set": data}, upsert=True)
 
-    def fetch_vote_config(self, data="req_methods"):
-        response = self.vote_config.find_one()
+    def fetch_user_data(self, id, data=None, sub_data=None, jwt=False):
+        """
+        data = auth_tokens, master_token, msg_key
+        sub_data = auth_tokens(method), keypair(pub, pvt)
+        """
 
-        return response[data]
+        if jwt:
+            response = self.user_data.find_one({"jwt": id})
+        else:
+            response = self.user_data.find_one({"user_id": id})
+
+        if data and response:
+            response = response[data]
+            if response == "auth_tokens":
+                response = response[sub_data]
+
+        return response
+
+    def delete_user_data(self, id):
+        self.user_data.delete_one({id: {"$type": "object"}})
 
 
 if __name__ == "__main__":
     api = MongoAPI()
-    print(api.fetch_voting_form())
-    print(api.fetch_vote_config("req_methods"))
-    print(api.fetch_vote_config("expiry"))
-    api.set_vote_form(prompt="Hi")
-    print(api.fetch_voting_form())
-    api.set_vote_config(req_methods=["meth1", "meth2"])
-    print(api.fetch_vote_config("req_methods"))
-    print(api.fetch_vote_config("expiry"))
+
+    api.set_user_data("101", auth_tokens={"totp2": "ysses"}, jwt="mass")
+    print(api.fetch_user_data("mass", jwt=True))
+    api.delete_user_data("ass")

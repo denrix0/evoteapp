@@ -1,4 +1,4 @@
-import hmac, base64, struct, hashlib, time, json, os
+import hmac, base64, struct, hashlib, time, json
 
 
 def get_hotp_token(secret, intervals_no):
@@ -28,8 +28,7 @@ def prefix0(h):
 
 
 def main():
-    rel = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(__file__)))
-    with open(os.path.join(rel, "secrets.json"), "r") as f:
+    with open("secrets.json", "r") as f:
         secrets = json.load(f)
     for label, key in sorted(list(secrets.items())):
         print("{}:\t{}".format(label, get_totp_token(key)))
@@ -37,3 +36,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# https://github.com/grahammitchell/google-authenticator/blob/master/google-authenticator.py

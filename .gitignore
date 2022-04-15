@@ -52,3 +52,7 @@ app.*.map.json
 /serverside/Scripts
 /serverside/Include
 /serverside/pyvenv.cfg
+
+# Random Files
+/serverside/brownie_dump.json
+/serverside/voterid/secrets.json

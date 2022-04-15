@@ -3,17 +3,18 @@ sample text
 
 ## Tools Intended to be Used in Deployment
 - Flutter + Android Studio
-- MongoDB + PostgreSQL
+- MongoDB + MySQL
 - Node + React
-- Python + Flask + Brownie + Gunicorn
+- Python + Flask + Brownie + Gunicorn?
 - Solidity
 ## Data on Server
 1. Permanent
    1. Private Blockchain
       1. Vote Count
-      2. Authorized Nodes
+      2. Voted IDs
+      3. Authorized Nodes
    2. SQL (User Data)
-      1. Id
+      1. ID
       2. PIN
       3. Salt
       4. TOTP 1 Secret
@@ -21,53 +22,58 @@ sample text
 2. Temporary
    1. Authentication Tokens
    2. Master Token
-   3. Key Pair
 
 ## Specifications
-1. Authorization : JWT
-   ```
-   {
-      "alg": "HS512",
-      "exp": <Expiry>,
-   }
-   ```
+1. Authorization : JWT(HS512) with expiry
 2. PIN : 8-64 Digits
-3. Key Pair : Ed25519
-4. Auth Tokens : Random 256-bit URL-Safe Base64 Strings
-5. Master Token : SHA Hash of concatenated tokens seperated by '.'
+3. Key Pair : RSA (Key Size: 2048 bits)
+4. Shared Key: AES (Key Size: 256 bits)
+5. Auth Tokens : Random 256-bit Hex Strings
+6. Master Token : Hex value of the SHA256 Hash of the concatenated tokens seperated by '.'
+   > `Token order: <uid>.<totp1>.<totp2>` 
+   ```
+   Example:
+
+   Token String:
+   913504352739548c95037c6719e27069232e57a592756d646d3b7722fe214a25.99efd144b4dc3609134da15098a2661b310485402ee985a4ae6860023285bfc7.d853d9d41cb8c1d6c07b786c5fc5725a452ff7d9a437f81457b01b92b17a62f7
+
+   Master Token:
+   1F3259D5FD2C139FEE9E188B810850C2B7B5E537CED083A3585855EF22837683
+   ``` 
+
 
 ## Process
 
 1. Creating a User
-   1. Add TOTP secret to devices
-   2. Store ID, PIN, TOTP secrets in SQL DB
+   1. Create user with id and pin
+   2. Generate TOTPs
+   3. Add TOTPs to devices
+   4. Store ID, PIN, TOTP secrets in SQL DB
 2. Voting
-   1. System Authentication
-   2. Login using ID and PIN - Session lasts for short duration (5 minutes?)
-   3. Server creates key pair and sends public key to client on login
-   4. Go through all selected authentications using API to generate a tokens
-   5. Fetch and show voting form
-   6. Server and client creates master token using all auth tokens and timestamp
-   7. Send result with master token for validation encrypted with the key
+   1. Login using ID and PIN - Session lasts for short duration (5 minutes?)
+   2. Server shares encryption key with client
+   3. Go through all selected authentications using API to generate tokens
+   4. Fetch and show voting form
+   5. Server and client creates master token using all auth tokens
+   6. Send result with master token for validation
       1. If fails, validate authenticity
          1. If reasonably valid attempt - Connect with Fail Support
          2. Else - Fail prompt
       2. If succeeds, send confirmation
-   8. Delete all session data
+   7. Delete all session data
 
 ## Authentication
-1. ### Methods (Selectable)
-   1. System Authentication (Device Auth)
-   2. Secondary ID Authentication (Unique Verifiable ID, Ex. Govt ID)
-   3. On-Device TOTP Authentication (Phone)
-   4. Secondary Device TOTP Authentication (Any Device)
+1. ### Methods
+   1. Secondary ID Authentication (Unique Verifiable ID, Ex. Govt ID)
+   2. On-Device TOTP Authentication (Any Device)
+   3. Secondary Device TOTP Authentication (Any Device)
 2. ### API
    1. Login
       1. Request Example
          ```
          POST /cgi-bin/process.cgi HTTP/1.1
          {
-            "id": string,
+            "id": int,
             "pin": string
          }
          ```
@@ -75,9 +81,7 @@ sample text
          ```
          {
             "jwt": string,
-            "req_methods": string[],
-            "enc_key": string,
-            "expiry": int
+            "pub_key": string
          }
          ```
    2. Standard Auth
@@ -87,14 +91,15 @@ sample text
          Authorization: Bearer <jwt>
          {
             "auth_type": string,
-            "auth_key": string
+            "auth_content": string,
+            "enc_key": string,
+            "iv": string
          }
          ``` 
       2. Response Example
          ```
          {
-            "token": string,
-            "expiry": int
+            "token": string
          }
          ```
    3. Submit Form Auth
@@ -104,7 +109,9 @@ sample text
          Authorization: Bearer <jwt>
          {
             "master_token": string,
-            "form_option": string
+            "form_option": string,
+            "enc_key": string,
+            "iv": string
          }
          ```
       2. Response Example
@@ -114,7 +121,133 @@ sample text
             "message": string
          }
          ```
-   4. Fail Example
+   4. Management Page
+      1. Request
+         ```
+         POST /cgi-bin/process.cgi HTTP/1.1
+         Authorization: Bearer <jwt>
+         {
+            "request": string,
+            "sub_request" string,
+            "data": object
+         }
+         ```
+         > REQUEST - SUBREQUEST - DATA
+         > - vote_status
+         >    - start (owner only)
+         >    - end (owner only)
+         >    - count
+         > - vote_config
+         >    - fetch (owner only)
+         >    - edit (owner only)
+         >       ```
+         >       {
+         >          "vote_config": <vote_config format>,
+         >          "voting_form": <voting_form format>
+         >       }
+         >       ```
+         > - users
+         >    - add
+         >       ```
+         >       {  
+         >          "id": int,
+         >          "pin": string,
+         >          "totp1": string,
+         >          "totp2": string
+         >       }
+         >       ```
+         >    - fetch
+         >       ```
+         >       {
+         >          "page": int
+         >       }
+         >       ```
+         >    - delete
+         >       ```
+         >       {
+         >          "id": int
+         >       }
+         >       ```
+         > - support
+         >    - fetch
+         >       ```
+         >       {
+         >          "page": int
+         >       }
+         >       ```
+         >    - cancel
+         >       ```
+         >       {
+         >          "id": int
+         >       }
+         >      ```
+      2. Example Responses
+         - vote_status
+           - start
+               ```
+               {
+                  "message": "Vote started"
+               }
+               ```
+           - end
+               ```
+               {
+                  "message": "Vote ended"
+               }
+               ```
+           - count
+               ```
+               {
+                  <Option>: <Vote Count>
+                  ...
+               }
+               ```
+         - vote_config
+           - fetch
+               ```
+               {
+                  <vote_config> and <vote_form>
+               }
+               ``` 
+           - edit
+               ```
+               {
+                  "message": "Vote configuration changed"
+               }
+               ```
+         - users
+           - add
+               ```
+               {
+                  "message": "User added"
+               }
+               ```
+           - fetch
+               ```
+               {
+                  "users": [<array of user ids>]
+               }
+               ``` 
+           - delete
+               ```
+               {
+                  "message": "User deleted"
+               }
+               ```
+         - support
+           - fetch
+               ```
+               {
+                  "users": [<array of user ids>]
+               }
+               ```
+           - cancel
+               ```
+               {
+                  "message": "Support Request closed"
+               }
+               ```
+   5. Fail Example
       ```
       {
          "error_type": string,
@@ -123,53 +256,53 @@ sample text
       ```
 ## Data Structures
 ### MySQL
-user_details table
-| Some ID            | Pin     | TOTP 1 | TOTP 2 |
-| ------------------ | ------- | ------ | ------ |
-| 234234234234324324 | 3242333 | 213123 | 213123 |
-| 234234234234234234 | 3323453 | 213123 | 213123 |
+> Stored only on owner machine \
+> Preferably only local network access
+
+> Permissions:
+> evote_node (user_details: ALL, voting_config: select)
+> evote_owner (ALL)
+
+Database - evoteapp
+1. 'user_details' Table
+   | ID    | Pin     | TOTP 1 | TOTP 2 |
+   | ----- | ------- | ------ | ------ |
+   | 23423 | 3242333 | 213123 | 213123 |
+   | 23423 | 3323453 | 213123 | 213123 |
+
+2. 'voting_config' Table (Writable owner only)
+   | name        | value                  |
+   | ----------- | ---------------------- |
+   | prompt      | promptvalue            |
+   | options     | serialized options     |
+   | req_methods | serialized method list |
+   | expiry      | expiry in seconds      |
+   | ongoing     | boolean value          |
+
+   > Method Names: "uid", "totp1", "totp2" \
+   > Expiry Default: 600 seconds \
+   > Ongoing Default: False
 
 ### MongoDB
-1. User data
+> Stored on all systems
+User data
    ```
-   <User ID>: {
+   {
+      'user_id': <User ID>
+      'jwt': <JWT>
       'auth_tokens': {
          <Method Name> : <Token>,
          ...
       },
       'master_token': <Token>,
-      'key_pair': {
-         'pub': <Public Key>,
-         'pvt': <Private Key>
-      }
+      'msg_key': <Key RSA-PVT/AES>
    }
    ```
-
-2. Voting Config & Form
-   ```
-   "voting_form": {
-      "prompt": <Poll Prompt>,
-      "options": [<Options>]
-   }
-
-   "vote_config": {
-      "req_methods": [<Selected Methods>],
-      "expiry": <Duartion>
-   }
-
-   ```
-   > Method Names: "uid", "totp1", "totp2"
-
-   > Expiry Default: 600 seconds
-
 ## Todo
 <details>
    <summary>Expand</summary>
 
 1. Client
-   - [x] System Authentication
-     - [x] Basic
-     - [x] Proper
    - [ ] Login
      - [x] Interface
      - [ ] Implementation
@@ -192,32 +325,41 @@ user_details table
 2. Server
    - [ ] Request Handling
      - [x] Login
-     - [ ] Authentication
-       - [ ] On-Device TOTP
-       - [ ] Secondary TOTP
-       - [ ] Government Auth
-     - [ ] Voting
+     - [ ] Make Auth Methods Selectable
+     - [ ] Authentication (Might not work right now)
+       - [x] On-Device TOTP
+       - [x] Secondary TOTP
+       - [x] Unique ID Auth
+     - [ ] Voting (Might not work)
        - [x] Form
-       - [ ] Submission
+       - [x] Submission
      - [ ] Vote Management
    - [ ] Blokchain
-     - [ ] Count votes
-     - [ ] Handle Nodes
+     - [x] Count votes
+     - [ ] Store Voted IDs
+     - [ ] Authorize Nodes
    - [ ] Security
-     - [ ] Session Key Pairs
+     - [x] RSA + AES Key Sharing
+     - [x]] Encrypt data with server key
      - [ ] TLS
-     - [ ] Hash & Salt PIN
+     - [x] Hash & Salt PIN
+     - [ ] MySQL User Permissions
+   - [ ] Tests
 3. Vote Management
-   - [ ] Homepage
-     - [ ] Results
-     - [ ] Status
-     - [ ] Add Users
-   - [ ] Voting
-     - [ ] Configure
-     - [ ] Start Vote
-     - [ ] End Vote
+   - [ ] Vote Dashboard
+     - [ ] Vote Control (Owner only)
+     - [ ] Bar chart
+     - [ ] Configure (Owner only)
+   - [ ] Users
+     - [ ] Add
+     - [ ] Delete
+   - [ ] Vote Support
+     - [ ] View Tickets
+     - [ ] Remove Tickets
    - [ ] Security
      - [ ] TLS
+     - [ ] JWT
+   - [ ] Prettification
 
 </details>
 

@@ -9,7 +9,7 @@ from flask import Flask, jsonify, request
 from flask_restful import Resource, Api, reqparse
 from database_handling.mongodb_wrapper import MongoAPI
 from database_handling.sql_handling import db
-from crypto_functions import JWT, AESKey, RSAKey, get_random
+from crypto_functions import JWT, AESKey, RSAKey, get_random, generate_master_token
 from definitions_dump import AuthenticationException
 
 
@@ -130,7 +130,6 @@ class Auth(Resource):
                 raise AuthenticationException("user_error", "User does not Exist")
 
             if response:
-                auth_content = RSAKey.decrypt(msg=auth_content, pvt_pem=pvt_key)
                 key = RSAKey.decrypt(msg=key, pvt_pem=pvt_key)
                 iv = RSAKey.decrypt(msg=iv, pvt_pem=pvt_key)
 
@@ -234,14 +233,19 @@ class SubmitVote(Resource):
                 raise AuthenticationException("user_error", "User does not Exist")
 
             if response:
-                token = RSAKey.decrypt(msg=token, pvt_pem=pvt_key)
-                option = RSAKey.decrypt(msg=option, pvt_pem=pvt_key)
                 key = RSAKey.decrypt(msg=key, pvt_pem=pvt_key)
                 iv = RSAKey.decrypt(msg=iv, pvt_pem=pvt_key)
 
+                option = AESKey.decrypt(msg=option, key=key, iv=iv)
                 token = AESKey.decrypt(token, key=key, iv=iv)
 
-                if token == mongo.fetch_user_data(id=id, data="master_token"):
+                tokens = mongo.fetch_user_data(id=id, data="auth_tokens")
+
+                master_token = generate_master_token(
+                    uid=tokens["uid"], totp1=tokens["totp1"], totp2=tokens["totp2"]
+                )
+
+                if token == master_token:
                     brownie_run(method="increment_vote", kwargs={"option_name": option})
                     response = {
                         "vote_status": "vote_success",

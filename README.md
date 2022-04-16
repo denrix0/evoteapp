@@ -19,9 +19,10 @@ sample text
       3. Salt
       4. TOTP 1 Secret
       5. TOTP 2 Secret
-2. Temporary
+2. Temporary (MongoDB)
    1. Authentication Tokens
-   2. Master Token
+   2. RSA Pvt/AES Key
+   3. User JWT
 
 ## Specifications
 1. Authorization : JWT(HS512) with expiry
@@ -294,7 +295,6 @@ User data
          <Method Name> : <Token>,
          ...
       },
-      'master_token': <Token>,
       'msg_key': <Key RSA-PVT/AES>
    }
    ```
@@ -326,25 +326,25 @@ User data
    - [ ] Request Handling
      - [x] Login
      - [ ] Make Auth Methods Selectable
-     - [ ] Authentication (Might not work right now)
+     - [x] Authentication
        - [x] On-Device TOTP
        - [x] Secondary TOTP
        - [x] Unique ID Auth
-     - [ ] Voting (Might not work)
+     - [x] Voting
        - [x] Form
        - [x] Submission
      - [ ] Vote Management
    - [ ] Blokchain
      - [x] Count votes
      - [ ] Store Voted IDs
-     - [ ] Authorize Nodes
+     - [ ] Authorize Nodes (Probably works, can't test)
    - [ ] Security
      - [x] RSA + AES Key Sharing
      - [x]] Encrypt data with server key
      - [ ] TLS
      - [x] Hash & Salt PIN
      - [ ] MySQL User Permissions
-   - [ ] Tests
+   - [x] Tests
 3. Vote Management
    - [ ] Vote Dashboard
      - [ ] Vote Control (Owner only)

@@ -8,12 +8,9 @@ class MongoAPI:
         db = mongoclient["evote_db"]
         self.user_data = db["user_data"]
 
-    def set_user_data(
-        self, id, jwt=None, msg_key=None, master_token=None, auth_tokens={}
-    ):
+    def set_user_data(self, id, jwt=None, msg_key=None, auth_tokens={}):
         """
         msg_key = string
-        master_token = string
         auth_tokens = {'<method>': '<token>', ...}
         """
         defaults = self.fetch_user_data(id=id)
@@ -22,7 +19,6 @@ class MongoAPI:
             "user_id": id,
             "jwt": "",
             "auth_tokens": {},
-            "master_token": "",
             "msg_key": "",
         }
 
@@ -38,9 +34,6 @@ class MongoAPI:
 
         if msg_key:
             data["msg_key"] = msg_key
-
-        if master_token:
-            data["master_token"] = master_token
 
         if auth_tokens:
             for k, v in auth_tokens.items():

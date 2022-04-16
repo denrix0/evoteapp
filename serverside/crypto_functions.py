@@ -21,8 +21,8 @@ def generate_master_token(uid, totp1, totp2):
     """
     token_string = str(uid + "." + totp1 + "." + totp2 + ".")
 
-    digest = hashes.Hash(hashes.SHA256)
-    digest.update(token_string)
+    digest = hashes.Hash(hashes.SHA256())
+    digest.update(token_string.encode())
     digest = digest.finalize()
 
     master_token = digest.hex()
@@ -91,6 +91,7 @@ class RSAKey:
         pub_pem = pub_pem.encode()
 
         pub_key = serialization.load_pem_public_key(pub_pem)
+
         msg = msg.encode()
 
         encrypted_msg = pub_key.encrypt(
@@ -190,15 +191,17 @@ class AESKey:
         key = secrets.token_bytes(32)
         iv = secrets.token_bytes(16)
 
-        return key, iv
+        return key.hex(), iv.hex()
 
     @staticmethod
     def encrypt(msg, key, iv):
         """
-        takes message, key and iv
+        takes message(str), key(hex) and iv(hex)
 
         returns hex of encrypted messsage
         """
+        key = bytes.fromhex(key)
+        iv = bytes.fromhex(iv)
 
         padder = PKCS7(128).padder()
         msg = padder.update(msg.encode()) + padder.finalize()
@@ -217,6 +220,9 @@ class AESKey:
         returns decrypted message string
         """
 
+        key = bytes.fromhex(key)
+        iv = bytes.fromhex(iv)
+        print(msg)
         msg = bytes.fromhex(msg)
 
         cipher = Cipher(algorithms.AES(key), modes.CBC(iv))

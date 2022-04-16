@@ -38,7 +38,7 @@ def write_temp_settings(cursor):
     stmt += f"('options', '{options.hex()}'), "
     stmt += f"('req_methods', '{req_methods.hex()}'), "
     stmt += "('expiry', '600'), "
-    stmt += "('ongoing', '0')"
+    stmt += "('ongoing', '1')"
 
     cursor.execute(stmt)
 

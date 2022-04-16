@@ -31,7 +31,7 @@ def test_vote_process():
     auth = send_api_request("login", "POST", body={"id": "69", "pin": "420"})
 
     if "error_type" not in auth:
-        for key in ["jwt", "req_methods", "pub_key"]:
+        for key in ["jwt", "pub_key"]:
             if key not in auth:
                 errors.append(key + " is missing from auth response")
     else:
@@ -63,7 +63,9 @@ def test_vote_process():
             else:
                 data["auth_content"] = get_totp_token(secret=totp_secrets[meth])
 
-            data["auth_content"] = RSAKey.encrypt(pub_key, data["auth_content"])
+            data["auth_content"] = AESKey.encrypt(
+                msg=data["auth_content"], key=key, iv=iv
+            )
 
             auth_response = send_api_request("auth_verify", "POST", body=data, auth=jwt)
 
@@ -80,6 +82,8 @@ def test_vote_process():
                 errors.append((key + " is missing from vote form"))
 
         # Test Vote Submission
+        print(tokens)
+
         master_token = generate_master_token(
             tokens["uid"], tokens["totp1"], tokens["totp2"]
         )
@@ -88,10 +92,12 @@ def test_vote_process():
 
         key, iv = AESKey.generate()
 
-        data["master_token"] = RSAKey.encrypt(pub_key, master_token)
+        data["master_token"] = AESKey.encrypt(msg=master_token, key=key, iv=iv)
         data["enc_key"] = RSAKey.encrypt(pub_key, key)
         data["iv"] = RSAKey.encrypt(pub_key, iv)
-        data["form_option"] = RSAKey.encrypt(pub_key, vote_form["options"][0])
+        data["form_option"] = AESKey.encrypt(
+            msg=vote_form["options"][0], key=key, iv=iv
+        )
 
         sub_response = send_api_request("submit", "POST", body=data, auth=jwt)
 

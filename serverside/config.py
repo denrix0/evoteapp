@@ -3,7 +3,7 @@ from webbrowser import get
 from dotenv import load_dotenv
 from os import getenv
 
-basedir = Path(".") / "serverside"
+basedir = Path(__file__).parent
 
 # Load Environment Variables
 load_dotenv()

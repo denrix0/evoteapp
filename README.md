@@ -325,7 +325,6 @@ User data
 2. Server
    - [ ] Request Handling
      - [x] Login
-     - [ ] Make Auth Methods Selectable
      - [x] Authentication
        - [x] On-Device TOTP
        - [x] Secondary TOTP
@@ -334,15 +333,17 @@ User data
        - [x] Form
        - [x] Submission
      - [ ] Vote Management
+   - [ ] Make Auth Methods Selectable
    - [ ] Blokchain
      - [x] Count votes
-     - [ ] Store Voted IDs
+     - [x] Store Voted IDs
      - [ ] Authorize Nodes (Probably works, can't test)
    - [ ] Security
      - [x] RSA + AES Key Sharing
      - [x]] Encrypt data with server key
-     - [ ] TLS
+     - [x] HTTPS
      - [x] Hash & Salt PIN
+     - [ ] Remove temporary files on shutdown
      - [ ] MySQL User Permissions
    - [x] Tests
 3. Vote Management

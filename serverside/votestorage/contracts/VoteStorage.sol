@@ -34,10 +34,21 @@ contract VoteStorage {
 
     // Vote Details
 
+    mapping(string => bool) idToVotestatus;
     mapping(string => uint256) optionToVoteCount;
     mapping(string => bool) optionExists;
 
     string[] public options;
+
+    function setVoted(string[] memory _ids) public checkNodeAuth {
+        for (uint256 i = 0; i < _ids.length; i++) {
+            idToVotestatus[_ids[i]] = true;
+        }
+    }
+
+    function checkVoted(string memory _id) public view returns (bool) {
+        return idToVotestatus[_id];
+    }
 
     function addOption(string memory _name) public onlyOwner {
         require(!optionExists[_name], "Option already exists");

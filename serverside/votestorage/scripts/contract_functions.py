@@ -49,15 +49,20 @@ def get_count(option_name):
     return tx
 
 
-def write_votes_json(option_list=None, json_file="dump.json"):
-    """
-    option_list = list of option names
-    json_file = Location of json file
-    """
-    print(json_file)
+def set_voted(ids):
+    tx = VoteStorage[-1].setVoted(ids)
+    tx.wait(1)
+
+
+def get_voted(id):
+    tx = VoteStorage[-1].checkVoted(id)
+
+    return tx
+
+
+def get_option_values(option_list=None):
     data = {}
     for option in option_list:
         data[option] = get_count(option)
 
-    with open(json_file, "w") as f:
-        json.dump(data, f)
+    return data

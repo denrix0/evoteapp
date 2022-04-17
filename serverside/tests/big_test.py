@@ -6,7 +6,7 @@ from voterid.totpclient import get_totp_token
 
 
 def send_api_request(path=None, method="GET", body=None, auth=None):
-    url = "http://localhost:5000/"
+    url = "https://127.0.0.1:5000/"
 
     if path:
         url += path
@@ -17,9 +17,11 @@ def send_api_request(path=None, method="GET", body=None, auth=None):
         headers["Authorization"] = auth
 
     if method == "GET":
-        response = requests.get(url)
+        response = requests.get(url, verify=False)
     if method == "POST":
-        response = requests.post(url, data=json.dumps(body), headers=headers)
+        response = requests.post(
+            url, data=json.dumps(body), headers=headers, verify=False
+        )
 
     return response.json()
 

@@ -55,4 +55,6 @@ app.*.map.json
 
 # Random Files
 /serverside/brownie_dump.json
+/serverside/voter_dump.json
 /serverside/voterid/secrets.json
+/serverside/ssl_stuff

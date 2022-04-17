@@ -26,18 +26,66 @@ proj = brownie.project.load(
 )
 brownie.network.connect("development")
 proj.load_config()
-json_file_loc = config.basedir / "brownie_dump.json"
 
 
-def brownie_run(method, json_file=False, kwargs={}):
-    if json_file:
-        kwargs["json_file"] = json_file_loc
-
-    brownie.run(
+def brownie_run(method, kwargs={}):
+    return brownie.run(
         script_path="scripts/contract_functions.py",
         method_name=method,
         kwargs=kwargs,
     )
+
+
+def store_voter_ids(id):
+    """
+    stores upto 10 ids in a json file
+    when called to add a 11th id, it dumps the json file's id into the blockchain and resets the json file
+    """
+
+    dump_file = config.basedir / "voter_dump.json"
+
+    reset = False
+
+    if dump_file.is_file():
+        with open(dump_file) as f:
+            data = json.load(f)
+
+        if int(data["count"]) < 10:
+            data["count"] += 1
+            data["id_array"].append(id)
+        else:
+            brownie_run(method="set_voted", kwargs={"ids": data["id_array"]})
+            reset = True
+
+    else:
+        reset = True
+
+    if reset:
+        data = {"count": 1, "id_array": [id]}
+
+    with open(dump_file, "w") as f:
+        json.dump(data, f)
+
+
+def check_vote(id):
+    dump_file = config.basedir / "voter_dump.json"
+
+    voted = False  # Assume vote has already been cast from this id
+
+    # Check json file
+    if dump_file.is_file():
+        with open(dump_file) as f:
+            data = json.load(f)
+            if id in data["id_array"]:
+                voted = True
+
+    # Check blockchain
+    response = brownie_run(method="get_voted", kwargs={"id": id})
+    if response:
+        print(type(response))
+        voted = True
+
+    return voted
 
 
 brownie_run(method="deploy")
@@ -188,17 +236,12 @@ class GetVoteForm(Resource):
 
 
 class MgmtPage(Resource):
-    def post(self):
+    def get(self):
         option_list = config.vote_config.options
 
-        brownie_run(
-            method="write_votes_json",
-            kwargs={"option_list": option_list},
-            json_file=True,
+        data = brownie_run(
+            method="get_option_values", kwargs={"option_list": option_list}
         )
-
-        with open(json_file_loc) as f:
-            data = json.load(f)
 
         return jsonify(data)
 
@@ -224,6 +267,11 @@ class SubmitVote(Resource):
         pvt_key = mongo.fetch_user_data(id, data="msg_key")
 
         try:
+            if check_vote(id):
+                raise AuthenticationException(
+                    "already_voted", "There is already a vote cast from this id"
+                )
+
             if not config.vote_config.ongoing:
                 raise AuthenticationException(
                     "no_vote", "There is no vote ongoing as of now"
@@ -246,7 +294,9 @@ class SubmitVote(Resource):
                 )
 
                 if token == master_token:
+                    store_voter_ids(id)
                     brownie_run(method="increment_vote", kwargs={"option_name": option})
+
                     response = {
                         "vote_status": "vote_success",
                         "message": "The vote has been cast successfully",
@@ -279,4 +329,10 @@ api.add_resource(MgmtPage, "/mgmt_page")
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host=config.SERVER_URI, port=config.SERVER_PORT)
+    context = (
+        str((config.basedir / "ssl_stuff" / "server.crt").resolve()),
+        str((config.basedir / "ssl_stuff" / "server.key").resolve()),
+    )
+    app.run(
+        debug=True, host=config.SERVER_URI, port=config.SERVER_PORT, ssl_context=context
+    )

@@ -10,7 +10,6 @@ from flask_restful import Resource, Api, reqparse
 from database_handling.mongodb_wrapper import MongoAPI
 from database_handling.sql_handling import db
 from crypto_functions import JWT, AESKey, RSAKey, get_random, generate_master_token
-from definitions_dump import AuthenticationException
 
 
 app = Flask(__name__)
@@ -82,7 +81,6 @@ def check_vote(id):
     # Check blockchain
     response = brownie_run(method="get_voted", kwargs={"id": id})
     if response:
-        print(type(response))
         voted = True
 
     return voted
@@ -111,15 +109,30 @@ class Login(Resource):
         pin = argsr["pin"]
 
         try:
+            if not id.isdigit() or (" " in id):
+                raise authentication.AuthenticationException(
+                    "invalid_id", "The id is invalid"
+                )
+
+            if (len(pin) < 8) or (" " in pin):
+                raise authentication.AuthenticationException(
+                    "invalid_pin", "The pin is invalid"
+                )
+
             if not config.vote_config.ongoing:
-                raise AuthenticationException(
+                raise authentication.AuthenticationException(
                     "no_vote", "There is no vote ongoing as of now"
+                )
+
+            if check_vote(id):
+                raise authentication.AuthenticationException(
+                    "already_voted", "There is already a vote cast from this id"
                 )
 
             auth, message = authentication.authenticate_login(id, pin)
 
             if not auth:
-                raise AuthenticationException("auth_error", message)
+                raise authentication.AuthenticationException("auth_error", message)
 
             existing_jwt = mongo.fetch_user_data(id, data="jwt")
             if existing_jwt:
@@ -127,7 +140,7 @@ class Login(Resource):
                 if not response:
                     if not id:
                         mongo.delete_user_data(id)
-                    raise AuthenticationException(
+                    raise authentication.AuthenticationException(
                         "already_active",
                         "This account is already logged in or session expired",
                     )
@@ -142,7 +155,7 @@ class Login(Resource):
                 "pub_key": pub,
             }
 
-        except AuthenticationException as e:
+        except authentication.AuthenticationException as e:
             response = {"error_type": e.code, "message": e.message}
 
         # JSON to return
@@ -170,12 +183,14 @@ class Auth(Resource):
             pvt_key = mongo.fetch_user_data(id, data="msg_key")
 
             if not config.vote_config.ongoing:
-                raise AuthenticationException(
+                raise authentication.AuthenticationException(
                     "no_vote", "There is no vote ongoing as of now"
                 )
 
             if not pvt_key:
-                raise AuthenticationException("user_error", "User does not Exist")
+                raise authentication.AuthenticationException(
+                    "user_error", "User does not Exist"
+                )
 
             if response:
                 key = RSAKey.decrypt(msg=key, pvt_pem=pvt_key)
@@ -191,33 +206,57 @@ class Auth(Resource):
                         authentication.AuthType.TOTP1,
                         authentication.AuthType.TOTP2,
                     ]:
+                        if len(auth_content != 6):
+                            raise authentication.AuthenticationException(
+                                "otp_error", "OTP is of invalid length"
+                            )
+
+                        if not auth_content.isdigit():
+                            raise authentication.AuthenticationException(
+                                "otp_error", "OTP must only contain numbers"
+                            )
+
+                        if " " in auth_content:
+                            raise authentication.AuthenticationException(
+                                "otp_error", "OTP must not contain spaces"
+                            )
+
                         authenticated = authentication.validate_totp(
                             id, auth_type, auth_content
                         )
                     elif auth_type == authentication.AuthType.UID:
+                        if " " in auth_content:
+                            raise authentication.AuthenticationException(
+                                "uid_error", "UID must not contain spaces"
+                            )
+
                         authenticated = authentication.validate_uid(id, auth_content)
 
                     if authenticated:
                         new_token = get_random(32)
 
                         mongo.set_user_data(
-                            id, auth_tokens={auth_type.value: new_token}
+                            id,
+                            auth_tokens={auth_type.value: new_token},
                         )
 
-                        response = {"method": auth_type.value, "token": new_token}
+                        response = {
+                            "method": auth_type.value,
+                            "token": AESKey.encrypt(new_token, key=key, iv=iv),
+                        }
                     else:
-                        raise AuthenticationException(
+                        raise authentication.AuthenticationException(
                             "auth_failed", "Authentication Failed"
                         )
                 else:
-                    raise AuthenticationException(
+                    raise authentication.AuthenticationException(
                         "invalid_method", "Invalid Authentication Method"
                     )
             else:
-                raise AuthenticationException(
+                raise authentication.AuthenticationException(
                     "token_invalid", "Invalid Authorization Token"
                 )
-        except AuthenticationException as e:
+        except authentication.AuthenticationException as e:
             response = {
                 "error_type": e.code,
                 "message": e.message,
@@ -268,30 +307,37 @@ class SubmitVote(Resource):
 
         try:
             if check_vote(id):
-                raise AuthenticationException(
+                raise authentication.AuthenticationException(
                     "already_voted", "There is already a vote cast from this id"
                 )
 
             if not config.vote_config.ongoing:
-                raise AuthenticationException(
+                raise authentication.AuthenticationException(
                     "no_vote", "There is no vote ongoing as of now"
                 )
 
             if not pvt_key:
-                raise AuthenticationException("user_error", "User does not Exist")
+                raise authentication.AuthenticationException(
+                    "user_error", "User does not Exist"
+                )
 
             if response:
                 key = RSAKey.decrypt(msg=key, pvt_pem=pvt_key)
                 iv = RSAKey.decrypt(msg=iv, pvt_pem=pvt_key)
 
                 option = AESKey.decrypt(msg=option, key=key, iv=iv)
-                token = AESKey.decrypt(token, key=key, iv=iv)
+                token = AESKey.decrypt(msg=token, key=key, iv=iv)
 
                 tokens = mongo.fetch_user_data(id=id, data="auth_tokens")
 
                 master_token = generate_master_token(
                     uid=tokens["uid"], totp1=tokens["totp1"], totp2=tokens["totp2"]
                 )
+
+                if option not in config.vote_config.options:
+                    raise authentication.AuthenticationException(
+                        "invaid_option", "That is an invalid option."
+                    )
 
                 if token == master_token:
                     store_voter_ids(id)
@@ -302,15 +348,15 @@ class SubmitVote(Resource):
                         "message": "The vote has been cast successfully",
                     }
                 else:
-                    raise AuthenticationException(
+                    raise authentication.AuthenticationException(
                         "bad_token", "Master token does not match"
                     )
             else:
-                raise AuthenticationException(
+                raise authentication.AuthenticationException(
                     "token_invalid", "Invalid Authorization Token"
                 )
 
-        except AuthenticationException as e:
+        except authentication.AuthenticationException as e:
             response = {
                 "error_type": e.code,
                 "message": e.message,

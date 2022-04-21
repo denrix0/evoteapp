@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:core';
 import 'package:evoteapp/structures.dart';
@@ -9,9 +10,12 @@ class AuthAPI {
   static late final http.Client client;
   final Logger log = Logger('API Logger');
 
-  AuthAPI(
-      {String scheme = 'http', String host = '127.0.0.1', int port = 5000}) {
+  AuthAPI() {
     client = http.Client();
+  }
+
+  void setBaseUri(
+      {String scheme = 'http', String host = '127.0.0.1', int port = 5000}) {
     baseUri = {'scheme': scheme, 'host': host, 'port': port};
   }
 
@@ -26,22 +30,30 @@ class AuthAPI {
       Map<String, String> headers = const {
         'Content-Type': 'application/json'
       }}) async {
-    AuthResponse _response = AuthResponse(reqStatus.none, {});
+    AuthResponse _response = AuthResponse(reqStatus.none, resType.none, {});
+
+    Duration _timeout = const Duration(seconds: 5);
 
     http.Response _httpResponse;
     try {
       if (_method == reqMethod.get) {
-        _httpResponse = await client.get(_getUrl(_location));
+        _httpResponse = await client.get(_getUrl(_location)).timeout(_timeout);
       } else {
-        _httpResponse = await client.post(_getUrl(_location),
-            body: json.encode(body), headers: headers);
+        _httpResponse = await client
+            .post(_getUrl(_location), body: json.encode(body), headers: headers)
+            .timeout(_timeout);
       }
 
       _response.content = json.decode(_httpResponse.body);
       _response.status = reqStatus.success;
+      _response.type = _response.content.containsKey("error_type")
+          ? resType.error
+          : resType.valid;
     } on http.ClientException catch (_) {
-      print(_.message);
       log.warning('HttpRequest Failed');
+      _response.status = reqStatus.fail;
+    } on TimeoutException {
+      log.warning('HttpRequest Timed out');
       _response.status = reqStatus.fail;
     }
 
@@ -60,11 +72,7 @@ class AuthAPI {
   Future getVoteForm() async {
     AuthResponse _response = await _sendApiRequest('/vote_form', reqMethod.get);
 
-    if (_response.status == reqStatus.success) {
-      return _response.content;
-    } else {
-      return "Fail";
-    }
+    return _response;
   }
 
   Future<AuthResponse> sendLoginRequest(String _id, String _pin) async {
@@ -76,9 +84,14 @@ class AuthAPI {
     return _response;
   }
 
-  Future<AuthResponse> sendAuthRequest(
-      String _type, String _key, String _authHeader) async {
-    Map<String, String> _body = {'auth_type': _type, 'auth_key': _key};
+  Future<AuthResponse> sendAuthRequest(String _type, String _content,
+      String _key, String _iv, String _authHeader) async {
+    Map<String, String> _body = {
+      'auth_type': _type,
+      'auth_content': _content,
+      'enc_key': _key,
+      'iv': _iv
+    };
 
     Map<String, String> _headers = {
       'Content-Type': 'application/json',
@@ -92,11 +105,13 @@ class AuthAPI {
     return _response;
   }
 
-  Future<AuthResponse> sendSubmitRequest(
-      String _masterToken, String _formOption, String _authHeader) async {
+  Future<AuthResponse> sendSubmitRequest(String _masterToken,
+      String _formOption, String _key, String _iv, String _authHeader) async {
     Map<String, String> _body = {
-      "gen_token": _masterToken,
-      "form_option": _formOption
+      "master_token": _masterToken,
+      "form_option": _formOption,
+      "enc_key": _key,
+      "iv": _iv
     };
 
     Map<String, String> _headers = {

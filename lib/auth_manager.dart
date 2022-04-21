@@ -1,55 +1,98 @@
-import 'package:local_auth/local_auth.dart';
+import 'dart:async';
+
+import 'package:evoteapp/crypto_functions.dart';
+import 'package:evoteapp/structures.dart';
 import 'auth_api_wrapper.dart';
 
 class AuthManager {
-  LocalAuthentication localAuth = LocalAuthentication();
+  final CryptoFunctions crypt = CryptoFunctions();
 
-  static AuthAPI authApi = AuthAPI(host: "192.168.1.34");
+  static final AuthManager _singleton = AuthManager._internal();
 
-  static bool didAuthenticateBio = false;
-  static bool didAuthenticatePin = false;
-  static bool didAuthenticateOtp = false;
-  static bool didAuthenticateGid = false;
-
-  Future<bool> getBiometricAuth() async {
-    bool _hasAuth = await localAuth.canCheckBiometrics;
-
-    if (_hasAuth && !didAuthenticateBio) {
-      didAuthenticateBio = await localAuth.authenticate(
-          localizedReason: 'Authenticate', biometricOnly: true);
-    }
-
-    return didAuthenticateBio;
+  factory AuthManager() {
+    return _singleton;
   }
 
-  bool getPinAuth(String _pin) {
-    String userPin = '7777';
+  AuthManager._internal();
 
-    if (_pin == userPin) {
-      didAuthenticatePin = true;
-    }
+  static AuthAPI? authApi;
+  String? _jwt;
+  String? _pubKey;
 
-    return didAuthenticatePin;
+  static Map<String, String> tokens = {};
+  static Map checkList = {"uid": false, "totp1": false, "totp2": false};
+
+  void init(String _ip, int port) {
+    authApi ??= AuthAPI();
+    authApi?.setBaseUri(scheme: 'https', host: _ip, port: port);
   }
 
-  bool getGovernmentAuth(String _gid) {
-    String userGid = '00000000';
+  Future<Map?> fetchVoteForm() async {
+    AuthResponse? _response = await authApi?.getVoteForm();
 
-    if (_gid == userGid) {
-      didAuthenticateGid = true;
+    if (_response?.status == reqStatus.success) {
+      return _response?.content;
     }
-
-    return didAuthenticateGid;
+    return null;
   }
 
-  Future<void> getOtpAuth(String _otp) async {
-    // print(await authApi.sendApiRequest());
-    // String _gotOtp = '666';
-    //
-    // if (_otp == _gotOtp) {
-    //   didAuthenticateOtp = true;
-    // }
-    //
-    // return didAuthenticateOtp;
+  Future<AuthResponse?> getPinAuth(String _id, String _pin) async {
+    AuthResponse? _response = await authApi?.sendLoginRequest(_id, _pin);
+
+    if (_response?.status == reqStatus.success) {
+      if (_response?.type == resType.valid) {
+        _jwt = _response?.content['jwt'];
+        _pubKey = _response?.content['pub_key'];
+      }
+    }
+
+    return _response;
+  }
+
+  Future<AuthResponse?> getAuth(String _content, String _type) async {
+    AuthResponse? _response = AuthResponse(reqStatus.none, resType.none, {});
+
+    if (_jwt != null && _pubKey != null) {
+      Map keyIv = crypt.generateKeyIv();
+
+      String content = crypt.aesEncrypt(_content, keyIv['key'], keyIv['iv']);
+
+      _response = await authApi?.sendAuthRequest(
+          _type,
+          content,
+          crypt.rsaEncrypt(_pubKey!, keyIv['key'].base16),
+          crypt.rsaEncrypt(_pubKey!, keyIv['iv'].base16),
+          _jwt!);
+
+      if (_response?.status == reqStatus.success) {
+        if (_response?.type == resType.valid) {
+          tokens[_type] = crypt.aesDecrypt(
+              _response?.content['token'], keyIv['key'], keyIv['iv']);
+          checkList[_type] = true;
+        }
+      }
+    }
+
+    return _response;
+  }
+
+  Future<AuthResponse?> sendVote(String _masterToken, _option) async {
+    AuthResponse? _response = AuthResponse(reqStatus.none, resType.none, {});
+
+    if (_jwt != null && _pubKey != null) {
+      Map keyIv = crypt.generateKeyIv();
+
+      String token = crypt.aesEncrypt(_masterToken, keyIv['key'], keyIv['iv']);
+      String option = crypt.aesEncrypt(_option, keyIv['key'], keyIv['iv']);
+
+      for (var item in ['key', 'iv']) {
+        keyIv[item] = crypt.rsaEncrypt(_pubKey!, keyIv[item].base16);
+      }
+
+      _response = await authApi?.sendSubmitRequest(
+          token, option, keyIv['key'], keyIv['iv'], _jwt!);
+    }
+
+    return _response;
   }
 }

@@ -19,7 +19,7 @@ def generate_master_token(uid, totp1, totp2):
     """
     Spits out master token
     """
-    token_string = str(uid + "." + totp1 + "." + totp2 + ".")
+    token_string = str(uid + "." + totp1 + "." + totp2)
 
     digest = hashes.Hash(hashes.SHA256())
     digest.update(token_string.encode())
@@ -222,7 +222,6 @@ class AESKey:
 
         key = bytes.fromhex(key)
         iv = bytes.fromhex(iv)
-        print(msg)
         msg = bytes.fromhex(msg)
 
         cipher = Cipher(algorithms.AES(key), modes.CBC(iv))

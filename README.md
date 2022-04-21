@@ -100,6 +100,7 @@ sample text
       2. Response Example
          ```
          {
+            "method: string,
             "token": string
          }
          ```
@@ -303,27 +304,29 @@ User data
    <summary>Expand</summary>
 
 1. Client
-   - [ ] Login
-     - [x] Interface
-     - [ ] Implementation
-   - [ ] Main Authentication
-     - [ ] Interface
-       - [ ] On-Device TOTP
-       - [ ] Secondary TOTP
-       - [ ] Government Auth
-     - [ ] Functionality
-       - [ ] On-Device TOTP
-       - [ ] Secondary TOTP
-       - [ ] Government Auth
-   - [ ] Vote Form
-     - [ ] Interface
-     - [ ] Fetch
-   - [ ] Security
-     - [ ] Encryption
-     - [ ] TLS
-   - [ ] Prettification
+    - [ ] Login
+        - [x] Server Address Field
+        - [ ] Save Server Address
+        - [x] Interface
+        - [ ] Implementation
+    - [ ] Main Authentication
+        - [ ] Interface
+            - [ ] On-Device TOTP
+            - [ ] Secondary TOTP
+            - [ ] Government Auth
+        - [ ] Functionality
+            - [ ] On-Device TOTP
+            - [ ] Secondary TOTP
+        - [ ] Government Auth
+    - [ ] Vote Form
+        - [ ] Interface
+        - [ ] Fetch
+    - [ ] Security
+        - [ ] Encryption
+        - [ ] TLS
+    - [ ] Prettification
 2. Server
-   - [ ] Request Handling
+    - [ ] Request Handling
      - [x] Login
      - [x] Authentication
        - [x] On-Device TOTP

@@ -2,6 +2,7 @@ import pyqrcode
 import secrets
 import tkinter
 import os
+import sys
 
 from voterid.totpclient import get_totp_token
 

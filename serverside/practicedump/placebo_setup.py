@@ -53,22 +53,19 @@ if __name__ == "__main__":
     totp1_secret = pyotp.random_base32()
     totp2_secret = pyotp.random_base32()
 
-    for i in range(10):
-        add_to_sql(
-            cursor,
-            i,
-            str(123 + i),
-            totp1=ServerKey.encrypt(totp1_secret),
-            totp2=ServerKey.encrypt(totp2_secret),
-        )
+    add_to_sql(
+        cursor,
+        69,
+        "694201337",
+        totp1=ServerKey.encrypt(totp1_secret),
+        totp2=ServerKey.encrypt(totp2_secret),
+    )
 
     otp = PyTOTP()
-    otp.present_qr(otp.get_totp_string(secret=totp1_secret))
-    otp.present_qr(otp.get_totp_string(secret=totp2_secret))
     print(otp.get_totp_string(secret=totp1_secret))
     print(otp.get_totp_string(secret=totp2_secret))
 
-    write_temp_settings(cursor)
+    # write_temp_settings(cursor)
 
     db.commit()
     db.close()

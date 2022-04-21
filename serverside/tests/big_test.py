@@ -30,7 +30,7 @@ def test_vote_process():
     errors = []
 
     # Test Login
-    auth = send_api_request("login", "POST", body={"id": "69", "pin": "420"})
+    auth = send_api_request("login", "POST", body={"id": "6", "pin": "420"})
 
     if "error_type" not in auth:
         for key in ["jwt", "pub_key"]:
@@ -84,7 +84,6 @@ def test_vote_process():
                 errors.append((key + " is missing from vote form"))
 
         # Test Vote Submission
-        print(tokens)
 
         master_token = generate_master_token(
             tokens["uid"], tokens["totp1"], tokens["totp2"]

@@ -3,6 +3,24 @@ from database_handling.sql_handling import fetch_entry
 
 import crypto_functions as cryp
 import pyotp
+import jwt
+import config
+import time
+
+
+token_time = lambda: int(time.time() + config.vote_config.expiry)
+
+
+class AuthType(Enum):
+    TOTP1 = "totp1"
+    TOTP2 = "totp2"
+    UID = "uid"
+
+
+class JWTStatus(Enum):
+    failed = 0
+    expired = 1
+    verified = 2
 
 
 class AuthenticationException(Exception):
@@ -12,12 +30,6 @@ class AuthenticationException(Exception):
 
     def __str__(self) -> str:
         return self.message
-
-
-class AuthType(Enum):
-    TOTP1 = "totp1"
-    TOTP2 = "totp2"
-    UID = "uid"
 
 
 def authenticate_login(id, pin):
@@ -48,5 +60,46 @@ def validate_totp(id, auth_type, token):
 
 
 def validate_uid(id, uid):
-    # TODO: Work with some API
+    # TODO: Implement sending a request to third party id verification service
     return True
+
+
+class JWT:
+    @staticmethod
+    def generate(id):
+        """
+        makes jwt
+        """
+        token = jwt.encode(
+            {
+                "exp": token_time(),
+                "iss": config.APP_NAME,
+                "user_id": id,
+            },
+            config.JWT_SECRET,
+            algorithm="HS512",
+        )
+
+        return token.decode()
+
+    @staticmethod
+    def verify(token):
+        """
+        verifies jwt
+        """
+        response = JWTStatus.failed
+        id = None
+        try:
+            id = jwt.decode(
+                token,
+                config.JWT_SECRET,
+                algorithm="HS512",
+                issuer=config.APP_NAME,
+            )["user_id"]
+            response = JWTStatus.verified
+        except jwt.exceptions.ExpiredSignatureError:
+            response = JWTStatus.expired
+        except jwt.exceptions.InvalidTokenError:
+            response = JWTStatus.failed
+
+        return id, response

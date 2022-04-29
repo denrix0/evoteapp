@@ -2,10 +2,10 @@
 sample text
 
 ## Tools Intended to be Used in Deployment
-- Flutter + Android Studio
+- Flutter
 - MongoDB + MySQL
-- Node + React
-- Python + Flask + Brownie + Gunicorn?
+- NextJS
+- Flask + Brownie
 - Solidity
 ## Data on Server
 1. Permanent

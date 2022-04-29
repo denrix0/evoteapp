@@ -1,15 +1,26 @@
-import json
-import authentication
 import config
-import os
 import brownie
 
-from pathlib import Path
 from flask import Flask, jsonify, request
 from flask_restful import Resource, Api, reqparse
 from database_handling.mongodb_wrapper import MongoAPI
 from database_handling.sql_handling import db
-from crypto_functions import JWT, AESKey, RSAKey, get_random, generate_master_token
+from brownie_functions import brownie_run, check_vote, store_voter_ids
+from authentication import (
+    AuthType,
+    AuthenticationException,
+    JWT,
+    JWTStatus,
+    authenticate_login,
+    validate_totp,
+    validate_uid,
+)
+from crypto_functions import (
+    AESKey,
+    RSAKey,
+    get_random,
+    generate_master_token,
+)
 
 
 app = Flask(__name__)
@@ -20,70 +31,9 @@ app.config["SQLALCHEMY_DATABASE_URI"] = config.SQL_URI
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.secret_key = config.SQL_SECRET
 
-proj = brownie.project.load(
-    (Path(os.path.dirname(os.path.realpath(__file__))) / "votestorage").resolve()
-)
+proj = brownie.project.load((config.basedir / "votestorage").resolve())
 brownie.network.connect("development")
 proj.load_config()
-
-
-def brownie_run(method, kwargs={}):
-    return brownie.run(
-        script_path="scripts/contract_functions.py",
-        method_name=method,
-        kwargs=kwargs,
-    )
-
-
-def store_voter_ids(id):
-    """
-    stores upto 10 ids in a json file
-    when called to add a 11th id, it dumps the json file's id into the blockchain and resets the json file
-    """
-
-    dump_file = config.basedir / "voter_dump.json"
-
-    reset = False
-
-    if dump_file.is_file():
-        with open(dump_file) as f:
-            data = json.load(f)
-
-        if int(data["count"]) < 10:
-            data["count"] += 1
-            data["id_array"].append(id)
-        else:
-            brownie_run(method="set_voted", kwargs={"ids": data["id_array"]})
-            reset = True
-
-    else:
-        reset = True
-
-    if reset:
-        data = {"count": 1, "id_array": [id]}
-
-    with open(dump_file, "w") as f:
-        json.dump(data, f)
-
-
-def check_vote(id):
-    dump_file = config.basedir / "voter_dump.json"
-
-    voted = False  # Assume vote has already been cast from this id
-
-    # Check json file
-    if dump_file.is_file():
-        with open(dump_file) as f:
-            data = json.load(f)
-            if id in data["id_array"]:
-                voted = True
-
-    # Check blockchain
-    response = brownie_run(method="get_voted", kwargs={"id": id})
-    if response:
-        voted = True
-
-    return voted
 
 
 brownie_run(method="deploy")
@@ -92,7 +42,7 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-# Home
+
 class Home(Resource):
     def get(self):
         return jsonify({"message": "Nothing to see here"})
@@ -110,40 +60,42 @@ class Login(Resource):
 
         try:
             if not id.isdigit() or (" " in id):
-                raise authentication.AuthenticationException(
-                    "invalid_id", "The id is invalid"
-                )
+                raise AuthenticationException("invalid_id", "The ID is invalid")
 
             if (len(pin) < 8) or (" " in pin):
-                raise authentication.AuthenticationException(
-                    "invalid_pin", "The pin is invalid"
-                )
+                raise AuthenticationException("invalid_pin", "The pin is invalid")
 
             if not config.vote_config.ongoing:
-                raise authentication.AuthenticationException(
+                raise AuthenticationException(
                     "no_vote", "There is no vote ongoing as of now"
                 )
 
             if check_vote(id):
-                raise authentication.AuthenticationException(
-                    "already_voted", "There is already a vote cast from this id"
+                raise AuthenticationException(
+                    "already_voted", "There is already a vote cast from this ID"
                 )
 
-            auth, message = authentication.authenticate_login(id, pin)
+            existing_jwt = mongo.fetch_user_data(id, data="jwt")
+
+            if existing_jwt:
+                _, response = JWT.verify(existing_jwt)
+
+                if response == JWTStatus.expired:
+                    mongo.delete_user_data(id)
+                    raise AuthenticationException(
+                        "session_expired",
+                        "Session has expired. Please log in again.",
+                    )
+                elif response == JWTStatus.verified:
+                    raise AuthenticationException(
+                        "already_active",
+                        "This user is currently logged in.",
+                    )
+
+            auth, message = authenticate_login(id, pin)
 
             if not auth:
-                raise authentication.AuthenticationException("auth_error", message)
-
-            existing_jwt = mongo.fetch_user_data(id, data="jwt")
-            if existing_jwt:
-                response = JWT.verify(existing_jwt)
-                if not response:
-                    if not id:
-                        mongo.delete_user_data(id)
-                    raise authentication.AuthenticationException(
-                        "already_active",
-                        "This account is already logged in or session expired",
-                    )
+                raise AuthenticationException("auth_error", message)
 
             pvt, pub = RSAKey.generate()
             jwt = JWT.generate(id)
@@ -155,7 +107,7 @@ class Login(Resource):
                 "pub_key": pub,
             }
 
-        except authentication.AuthenticationException as e:
+        except AuthenticationException as e:
             response = {"error_type": e.code, "message": e.message}
 
         # JSON to return
@@ -183,54 +135,50 @@ class Auth(Resource):
             pvt_key = mongo.fetch_user_data(id, data="msg_key")
 
             if not config.vote_config.ongoing:
-                raise authentication.AuthenticationException(
+                raise AuthenticationException(
                     "no_vote", "There is no vote ongoing as of now"
                 )
 
             if not pvt_key:
-                raise authentication.AuthenticationException(
-                    "user_error", "User does not Exist"
-                )
+                raise AuthenticationException("user_error", "User does not Exist")
 
-            if response:
+            if response == JWTStatus.verified:
                 key = RSAKey.decrypt(msg=key, pvt_pem=pvt_key)
                 iv = RSAKey.decrypt(msg=iv, pvt_pem=pvt_key)
 
                 auth_content = AESKey.decrypt(auth_content, key=key, iv=iv)
 
                 if auth_type in config.vote_config.req_methods:
-                    auth_type = authentication.AuthType(auth_type)
+                    auth_type = AuthType(auth_type)
                     authenticated = False
 
                     if auth_type in [
-                        authentication.AuthType.TOTP1,
-                        authentication.AuthType.TOTP2,
+                        AuthType.TOTP1,
+                        AuthType.TOTP2,
                     ]:
-                        if len(auth_content != 6):
-                            raise authentication.AuthenticationException(
+                        if len(auth_content) != 6:
+                            raise AuthenticationException(
                                 "otp_error", "OTP is of invalid length"
                             )
 
                         if not auth_content.isdigit():
-                            raise authentication.AuthenticationException(
+                            raise AuthenticationException(
                                 "otp_error", "OTP must only contain numbers"
                             )
 
                         if " " in auth_content:
-                            raise authentication.AuthenticationException(
+                            raise AuthenticationException(
                                 "otp_error", "OTP must not contain spaces"
                             )
 
-                        authenticated = authentication.validate_totp(
-                            id, auth_type, auth_content
-                        )
-                    elif auth_type == authentication.AuthType.UID:
+                        authenticated = validate_totp(id, auth_type, auth_content)
+                    elif auth_type == AuthType.UID:
                         if " " in auth_content:
-                            raise authentication.AuthenticationException(
+                            raise AuthenticationException(
                                 "uid_error", "UID must not contain spaces"
                             )
 
-                        authenticated = authentication.validate_uid(id, auth_content)
+                        authenticated = validate_uid(id, auth_content)
 
                     if authenticated:
                         new_token = get_random(32)
@@ -245,18 +193,18 @@ class Auth(Resource):
                             "token": AESKey.encrypt(new_token, key=key, iv=iv),
                         }
                     else:
-                        raise authentication.AuthenticationException(
+                        raise AuthenticationException(
                             "auth_failed", "Authentication Failed"
                         )
                 else:
-                    raise authentication.AuthenticationException(
+                    raise AuthenticationException(
                         "invalid_method", "Invalid Authentication Method"
                     )
             else:
-                raise authentication.AuthenticationException(
+                raise AuthenticationException(
                     "token_invalid", "Invalid Authorization Token"
                 )
-        except authentication.AuthenticationException as e:
+        except AuthenticationException as e:
             response = {
                 "error_type": e.code,
                 "message": e.message,
@@ -307,21 +255,19 @@ class SubmitVote(Resource):
 
         try:
             if check_vote(id):
-                raise authentication.AuthenticationException(
+                raise AuthenticationException(
                     "already_voted", "There is already a vote cast from this id"
                 )
 
             if not config.vote_config.ongoing:
-                raise authentication.AuthenticationException(
+                raise AuthenticationException(
                     "no_vote", "There is no vote ongoing as of now"
                 )
 
             if not pvt_key:
-                raise authentication.AuthenticationException(
-                    "user_error", "User does not Exist"
-                )
+                raise AuthenticationException("user_error", "User does not Exist")
 
-            if response:
+            if response == JWTStatus.verified:
                 key = RSAKey.decrypt(msg=key, pvt_pem=pvt_key)
                 iv = RSAKey.decrypt(msg=iv, pvt_pem=pvt_key)
 
@@ -335,7 +281,7 @@ class SubmitVote(Resource):
                 )
 
                 if option not in config.vote_config.options:
-                    raise authentication.AuthenticationException(
+                    raise AuthenticationException(
                         "invaid_option", "That is an invalid option."
                     )
 
@@ -348,15 +294,15 @@ class SubmitVote(Resource):
                         "message": "The vote has been cast successfully",
                     }
                 else:
-                    raise authentication.AuthenticationException(
+                    raise AuthenticationException(
                         "bad_token", "Master token does not match"
                     )
             else:
-                raise authentication.AuthenticationException(
+                raise AuthenticationException(
                     "token_invalid", "Invalid Authorization Token"
                 )
 
-        except authentication.AuthenticationException as e:
+        except AuthenticationException as e:
             response = {
                 "error_type": e.code,
                 "message": e.message,

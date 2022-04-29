@@ -1,8 +1,9 @@
 import 'dart:io';
 
-import 'package:evoteapp/poll_process.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+
+import 'package:evoteapp/poll_process.dart';
 import 'package:logging/logging.dart';
 import 'package:wakelock/wakelock.dart';
 
@@ -14,9 +15,6 @@ void main() {
       print('${record.level.name}: ${record.time}: ${record.message}');
     }
   });
-  if (kDebugMode) {
-    Wakelock.enable();
-  }
   runApp(const MyApp());
 }
 

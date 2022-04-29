@@ -5,6 +5,9 @@ import pickle
 
 class VoteConfig:
     def __init__(self):
+        """
+        Fetches vote configuration from app's SQL DB
+        """
         conn = mysql.connector.connect(
             host=config.SQL_HOSTNAME,
             user=config.SQL_USER,

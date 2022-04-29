@@ -1,5 +1,4 @@
 from pathlib import Path
-from webbrowser import get
 from dotenv import load_dotenv
 from os import getenv
 

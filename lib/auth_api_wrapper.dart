@@ -32,7 +32,7 @@ class AuthAPI {
       }}) async {
     AuthResponse _response = AuthResponse(reqStatus.none, resType.none, {});
 
-    Duration _timeout = const Duration(seconds: 5);
+    Duration _timeout = const Duration(seconds: 10);
 
     http.Response _httpResponse;
     try {

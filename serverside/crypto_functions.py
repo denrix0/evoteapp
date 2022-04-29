@@ -1,7 +1,5 @@
-import jwt
 import secrets
 import config
-import time
 
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.asymmetric import rsa, padding
@@ -11,7 +9,6 @@ from cryptography.hazmat.primitives import serialization, hashes
 from cryptography.fernet import Fernet
 from cryptography.exceptions import InvalidKey
 
-token_time = lambda: int(time.time() + config.vote_config.expiry)
 get_random = lambda x: secrets.token_hex(x)
 
 
@@ -232,63 +229,3 @@ class AESKey:
         decrypted_msg = unpadder.update(decrypted_msg) + unpadder.finalize()
 
         return decrypted_msg.decode()
-
-
-class JWT:
-    @staticmethod
-    def generate(id):
-        """
-        makes jwt
-        """
-        token = jwt.encode(
-            {
-                "exp": token_time(),
-                "iss": config.APP_NAME,
-                "user_id": id,
-            },
-            config.JWT_SECRET,
-            algorithm="HS512",
-        )
-
-        return token.decode()
-
-    @staticmethod
-    def verify(token):
-        """
-        verifies jwt
-        """
-        response = False
-        id = None
-        try:
-            id = jwt.decode(
-                token,
-                config.JWT_SECRET,
-                algorithm="HS512",
-                issuer=config.APP_NAME,
-            )["user_id"]
-            response = True
-        except jwt.exceptions.ExpiredSignatureError:
-            id = False  # TODO: Better response value
-        except jwt.exceptions.InvalidTokenError as e:
-            pass
-
-        return id, response
-
-
-if __name__ == "__main__":
-    pvt_key, pub_key = RSAKey.generate()
-
-    print(pvt_key)
-    print(pub_key)
-
-    a = ServerKey.encrypt("gas")
-    print(ServerKey.decrypt(a))
-
-    encrypted = RSAKey.encrypt(pub_key, "was")
-    print(RSAKey.decrypt(pvt_key, encrypted))
-
-    key, iv = AESKey.generate()
-
-    encd_msg = AESKey.encrypt("test message", key=key, iv=iv)
-    print(encd_msg)
-    print(AESKey.decrypt(encd_msg, key=key, iv=iv))

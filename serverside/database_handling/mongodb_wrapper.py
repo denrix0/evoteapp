@@ -4,14 +4,16 @@ from pymongo import MongoClient
 class MongoAPI:
     def __init__(self):
         mongoclient = MongoClient("localhost", 27017)
-
-        db = mongoclient["evote_db"]
-        self.user_data = db["user_data"]
+        self.user_data = mongoclient["evote_db"]["user_data"]
 
     def set_user_data(self, id, jwt=None, msg_key=None, auth_tokens={}):
         """
-        msg_key = string
-        auth_tokens = {'<method>': '<token>', ...}
+        Args:
+            id: User ID
+            jwt: JWT of the user
+            msg_key: Private RSA Key
+            auth_tokens: DICT of keys to set
+                         {'<method>': '<token>', ...}
         """
         defaults = self.fetch_user_data(id=id)
 
@@ -41,16 +43,20 @@ class MongoAPI:
 
         self.user_data.update_one({"user_id": id}, {"$set": data}, upsert=True)
 
-    def fetch_user_data(self, id, data=None, sub_data=None, jwt=False):
+    def fetch_user_data(self, id, data=None, sub_data=None):
         """
-        data = auth_tokens, master_token, msg_key
-        sub_data = auth_tokens(method), keypair(pub, pvt)
+        Args:
+            id: User id
+            data: Initial property
+                  Possible values: 'auth_tokens', 'master_token', 'msg_key'
+            sub_data: If data is 'auth_tokens' specify method name
+                      Possible values: 'totp1', 'totp2', 'uid'
+
+        Returns:
+            value of defined key
         """
 
-        if jwt:
-            response = self.user_data.find_one({"jwt": id})
-        else:
-            response = self.user_data.find_one({"user_id": id})
+        response = self.user_data.find_one({"user_id": id})
 
         if data and response:
             response = response[data]
@@ -60,12 +66,8 @@ class MongoAPI:
         return response
 
     def delete_user_data(self, id):
-        self.user_data.delete_one({id: {"$type": "object"}})
-
-
-if __name__ == "__main__":
-    api = MongoAPI()
-
-    api.set_user_data("101", auth_tokens={"totp2": "ysses"}, jwt="mass")
-    print(api.fetch_user_data("mass", jwt=True))
-    api.delete_user_data("ass")
+        """
+        Args:
+            id: User ID
+        """
+        self.user_data.delete_one({"user_id": id})

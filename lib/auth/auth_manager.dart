@@ -1,10 +1,11 @@
 import 'dart:async';
 
-import 'package:evoteapp/crypto_functions.dart';
-import 'package:evoteapp/structures.dart';
+import 'package:evoteapp/auth/validation/crypto_functions.dart';
+import 'package:evoteapp/components/structures.dart';
 import 'package:flutter/material.dart';
-import 'auth_api_wrapper.dart';
-import 'field_validations.dart';
+
+import 'package:evoteapp/auth/auth_api_wrapper.dart';
+import 'package:evoteapp/auth/validation/field_validations.dart';
 
 class AuthManager {
   final CryptoFunctions crypt = CryptoFunctions();

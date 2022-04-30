@@ -11,7 +11,7 @@ export default function ButtonAppBar(setPage) {
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">
         <Toolbar>
-          <TemporaryDrawer updatePage={setPage} />
+          <TemporaryDrawer setPage={setPage} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             VoteView
           </Typography>

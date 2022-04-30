@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../components/styles.dart';
-import 'final_page.dart';
+import 'confirmation.dart';
 
 class VotePage extends StatefulWidget {
   const VotePage({Key? key}) : super(key: key);

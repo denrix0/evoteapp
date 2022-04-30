@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:core';
-import 'package:evoteapp/structures.dart';
+import 'package:evoteapp/components/structures.dart';
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:evoteapp/screens/vote_page.dart';
+import 'package:evoteapp/screens/vote.dart';
 import 'package:flutter/material.dart';
 
 import 'package:evoteapp/components/structures.dart';

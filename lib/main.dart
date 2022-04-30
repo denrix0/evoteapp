@@ -1,11 +1,14 @@
 import 'dart:io';
 
+import 'package:evoteapp/screens/login.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:evoteapp/poll_process.dart';
 import 'package:logging/logging.dart';
-import 'package:wakelock/wakelock.dart';
+
+import 'auth/auth_manager.dart';
+
+AuthManager authManager = AuthManager();
 
 void main() {
   HttpOverrides.global = MyHttpOverrides();

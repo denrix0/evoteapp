@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../auth/auth_manager.dart';
+import '../auth/validation/crypto_functions.dart';
 import '../components/styles.dart';
+import '../main.dart';
 import 'confirmation.dart';
 
 class VotePage extends StatefulWidget {
@@ -15,30 +18,18 @@ class _VotePageState extends State<VotePage> {
   late String _masterToken;
 
   Future<Map?> getOptions() async {
-    // Map? form = await authManager.fetchVoteForm();
-    //TODO: reset
-    // _masterToken = CryptoFunctions().generateMasterToken(
-    //     AuthManager.tokens['uid']!,
-    //     AuthManager.tokens['totp1']!,
-    //     AuthManager.tokens['totp2']!);
-    Map form = {
-      'prompt': 'hi',
-      'options': ['Option 1', 'Option 2', 'Option 3', 'Option 4']
-    };
+    Map? form = await authManager.fetchVoteForm();
+    _masterToken = CryptoFunctions().generateMasterToken(
+        AuthManager.tokens['uid']!,
+        AuthManager.tokens['totp1']!,
+        AuthManager.tokens['totp2']!);
 
-    _masterToken = 'hi';
     return form;
   }
 
   void castVote(context) async {
-    // Map voteResponse =
-    //     await authManager.castVote(_masterToken, _selectedChoice);
-
-    Map voteResponse = {
-      'title': 'hi',
-      'message': 'loremaaaaaaaaaaaaaaaaaaaaa',
-      'error': null
-    };//TODO: reset
+    Map voteResponse =
+        await authManager.castVote(_masterToken, _selectedChoice);
 
     if (voteResponse['error'] == null) {
       Navigator.pushAndRemoveUntil(
@@ -62,60 +53,63 @@ class _VotePageState extends State<VotePage> {
       future: getOptions(),
       builder: (BuildContext buildContext, AsyncSnapshot snapshot) {
         return Scaffold(
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-          ),
-          body: SingleChildScrollView(
-            child: Column(
-              children: [
-                Text(
-                  "Poll Form",
-                  style: TextStyles.textTitleStyle(),
+          body: SafeArea(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 64.0),
+                child: Column(
+                  children: [
+                    Text(
+                      "Poll Form",
+                      style: TextStyles.textTitleStyle(),
+                    ),
+                    const Divider(
+                      height: 40,
+                      color: Colors.transparent,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      child: Text(
+                          snapshot.hasData ? snapshot.data['prompt'] : "Question", style: TextStyles.textDefaultStyle(context), textAlign: TextAlign.center,),
+                    ),
+                    snapshot.hasData
+                        ? Column(
+                        children: List.generate(snapshot.data['options'].length,
+                                (index) {
+                              return RadioListTile<String>(
+                                  title: Text(snapshot.hasData
+                                      ? snapshot.data['options'][index]
+                                      : "Option"),
+                                  value: snapshot.hasData
+                                      ? snapshot.data['options'][index]
+                                      : "Option",
+                                  groupValue: _selectedChoice,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _selectedChoice = value.toString();
+                                    });
+                                  });
+                            }))
+                        : const Text('Loading Options...'),
+                    const Divider(height: 20, color: Colors.transparent,),
+                    snapshot.hasData
+                        ? TextButton(
+                        onPressed: () {
+                          if (_selectedChoice != '') {
+                            castVote(context);
+                          } else {
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                              content: Text("Please select an option"),
+                            ));
+                          }
+                        },
+                        style: ButtonStyles.buttonContinue(context),
+                        child: const Text("Vote"))
+                        : const Text("Not loaded")
+                  ],
                 ),
-                const Divider(
-                  height: 40,
-                  color: Colors.transparent,
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0),
-                  child: Text(
-                      snapshot.hasData ? snapshot.data['prompt'] : "Question"),
-                ),
-                snapshot.hasData
-                    ? Column(
-                    children: List.generate(snapshot.data['options'].length,
-                            (index) {
-                          return RadioListTile<String>(
-                              title: Text(snapshot.hasData
-                                  ? snapshot.data['options'][index]
-                                  : "Option"),
-                              value: snapshot.hasData
-                                  ? snapshot.data['options'][index]
-                                  : "Option",
-                              groupValue: _selectedChoice,
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedChoice = value.toString();
-                                });
-                              });
-                        }))
-                    : const Text('Loading Options...'),
-                snapshot.hasData
-                    ? TextButton(
-                    onPressed: () {
-                      if (_selectedChoice != '') {
-                        castVote(context);
-                      } else {
-                        ScaffoldMessenger.of(context)
-                            .showSnackBar(const SnackBar(
-                          content: Text("Please select an option"),
-                        ));
-                      }
-                    },
-                    child: const Text("Vote"))
-                    : const Text("Not loaded")
-              ],
+              ),
             ),
           ),
         );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../components/styles.dart';
 import 'login.dart';
@@ -27,12 +28,21 @@ class FinalPage extends StatelessWidget {
                   title,
                   style: TextStyles.textTitleStyle(),
                 ),
+                const Divider(
+                  height: 40,
+                  color: Colors.transparent,
+                ),
                 Text(
                   message,
-                  style: TextStyles.textDefaultStyle(),
+                  style: TextStyles.textDefaultStyle(context),
+                ),
+                const Divider(
+                  height: 80,
+                  color: Colors.transparent,
                 ),
                 TextButton(
-                    onPressed: () => Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (context) => const LoginPage()), (route) => false),//SystemNavigator.pop(), //TODO: reset
+                    onPressed: () => SystemNavigator.pop(),
+                    style: ButtonStyles.buttonContinue(context),
                     child: Text(
                       "Close",
                       style: TextStyles.textButtonStyle(),

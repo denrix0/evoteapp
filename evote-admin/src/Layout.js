@@ -12,21 +12,21 @@ export const Pages = {
 };
 
 class Layout extends Component {
-  setPage(page) {
-    this.page = page;
-  }
-
   constructor(props) {
     super(props);
-    this.page = Pages.VoteMgmt;
+    this.state = { page: Pages.VoteMgmt };
+    this.setPage = this.setPage.bind(this);
+  }
+
+  setPage(page) {
+    this.setState({ page: page });
   }
 
   render() {
-    console.log(this.page);
     return (
       <div className="Layout">
         <AppBar setPage={this.setPage} />
-        <div>{this.page[1]}</div>
+        <div>{this.state.page[1]}</div>
       </div>
     );
   }

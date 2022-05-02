@@ -15,7 +15,7 @@ class AuthAPI {
   }
 
   void setBaseUri(
-      {String scheme = 'http', String host = '127.0.0.1', int port = 5000}) {
+      {String scheme = 'https', String host = '127.0.0.1', int port = 5000}) {
     baseUri = {'scheme': scheme, 'host': host, 'port': port};
   }
 

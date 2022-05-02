@@ -8,10 +8,8 @@ import ListItemText from "@mui/material/ListItemText";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Pages } from "../Layout";
 
-export default function TemporaryDrawer(setPage) {
+export default function TemporaryDrawer({ setPage }) {
   const [state, setState] = React.useState(false);
-
-  console.log(setPage);
 
   const toggleDrawer = (open) => (event) => {
     if (
@@ -33,7 +31,7 @@ export default function TemporaryDrawer(setPage) {
     >
       <List>
         {Object.values(Pages).map((page) => (
-          <ListItem onClick={() => console.log(page)}>
+          <ListItem onClick={() => setPage(page)}>
             <ListItemText primary={page[0]}></ListItemText>
           </ListItem>
         ))}

@@ -4,6 +4,7 @@ import 'package:evoteapp/screens/vote.dart';
 import 'package:flutter/material.dart';
 
 import 'package:evoteapp/components/structures.dart';
+import 'package:pin_code_fields/pin_code_fields.dart';
 
 import '../auth/auth_manager.dart';
 import '../components/styles.dart';
@@ -62,7 +63,7 @@ class _AuthenticatePageState extends State<AuthenticatePage>
                         ? pageController.animateToPage(--_currentIndex,
                             duration: _swipeTime, curve: Curves.easeIn)
                         : null,
-                    style: ButtonStyles.buttonStyleNav(),
+                    style: ButtonStyles.buttonNav(),
                     child: const Icon(Icons.navigate_before)),
                 Row(
                   children: List.generate(pageItems.length, (index) {
@@ -80,9 +81,10 @@ class _AuthenticatePageState extends State<AuthenticatePage>
                             decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: _currentIndex == index
-                                    ? const Color.fromRGBO(111, 147, 255, 0.9)
-                                    : const Color.fromRGBO(
-                                        111, 147, 255, 0.4))));
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context)
+                                        .colorScheme
+                                        .secondary)));
                   }),
                 ),
                 TextButton(
@@ -90,7 +92,7 @@ class _AuthenticatePageState extends State<AuthenticatePage>
                         ? pageController.animateToPage(++_currentIndex,
                             duration: _swipeTime, curve: Curves.easeIn)
                         : null,
-                    style: ButtonStyles.buttonStyleNav(),
+                    style: ButtonStyles.buttonNav(),
                     child: const Icon(Icons.navigate_next)),
               ],
             )
@@ -131,11 +133,13 @@ class _OTPAuthState extends State<OTPAuth> {
             padding: const EdgeInsets.all(32.0),
             decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: !AuthManager.checkList['totp1']
-                    ? Colors.grey
-                    : Colors.green),
+                color: (AuthManager.checkList['totp1']
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.secondary)
+                    .withAlpha(200)),
             child: Icon(
-              Icons.check,
+              Icons.phone_android,
+              color: Colors.black,
               size: MediaQuery.of(context).size.width - 200,
             ),
           ),
@@ -143,21 +147,24 @@ class _OTPAuthState extends State<OTPAuth> {
         Container(
           padding: const EdgeInsets.all(16.0),
           width: MediaQuery.of(context).size.width - 50,
-          child: TextField(
+          child: PinCodeTextField(
             controller: _textCtrl,
-            enableSuggestions: false,
             keyboardType: TextInputType.number,
             textInputAction: TextInputAction.go,
             onSubmitted: (string) => authManager.verifyAuth(
                 context, setState, _textCtrl.text, authType.tOtp1),
-            decoration: const InputDecoration(
-                border: OutlineInputBorder(borderSide: BorderSide())),
+            textStyle: TextStyles.textDefaultStyle(context),
+            pinTheme: TextInputStyle.pinTheme(context),
+            onChanged: (String value) {},
+            length: 6,
+            appContext: context,
           ),
         ),
         TextButton(
-            onPressed: () => authManager.verifyAuth(context, setState,
-                _textCtrl.text, authType.tOtp1), //verifyOTP(context),
-            child: const Text("Verify Code"))
+            onPressed: () => authManager.verifyAuth(
+                context, setState, _textCtrl.text, authType.tOtp1),
+            style: ButtonStyles.buttonVerify(context), //verifyOTP(context),
+            child: const Text("Verify"))
       ],
     );
   }
@@ -192,11 +199,13 @@ class _SecDeviceAuthState extends State<SecDeviceAuth> {
             padding: const EdgeInsets.all(32.0),
             decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: !AuthManager.checkList['totp2']
-                    ? Colors.grey
-                    : Colors.green),
+                color: (AuthManager.checkList['totp2']
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.secondary)
+                    .withAlpha(200)),
             child: Icon(
-              Icons.phone_android,
+              Icons.more_horiz,
+              color: Colors.black,
               size: MediaQuery.of(context).size.width - 200,
             ),
           ),
@@ -204,21 +213,24 @@ class _SecDeviceAuthState extends State<SecDeviceAuth> {
         Container(
           padding: const EdgeInsets.all(16.0),
           width: MediaQuery.of(context).size.width - 50,
-          child: TextField(
+          child: PinCodeTextField(
             controller: _textCtrl,
             textInputAction: TextInputAction.go,
-            enableSuggestions: false,
+            textStyle: TextStyles.textDefaultStyle(context),
+            pinTheme: TextInputStyle.pinTheme(context),
             keyboardType: TextInputType.number,
             onSubmitted: (string) => authManager.verifyAuth(
                 context, setState, _textCtrl.text, authType.tOtp2),
-            decoration: const InputDecoration(
-                border: OutlineInputBorder(borderSide: BorderSide())),
+            onChanged: (String value) {},
+            length: 6,
+            appContext: context,
           ),
         ),
         TextButton(
             onPressed: () => authManager.verifyAuth(
                 context, setState, _textCtrl.text, authType.tOtp2),
-            child: const Text("Verify Code"))
+            style: ButtonStyles.buttonVerify(context),
+            child: const Text("Verify"))
       ],
     );
   }
@@ -253,10 +265,13 @@ class _IDAuthState extends State<IDAuth> {
             padding: const EdgeInsets.all(32.0),
             decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color:
-                    !AuthManager.checkList['uid'] ? Colors.grey : Colors.green),
+                color: (AuthManager.checkList['uid']
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.secondary)
+                    .withAlpha(200)),
             child: Icon(
               Icons.perm_identity,
+              color: Colors.black,
               size: MediaQuery.of(context).size.width - 200,
             ),
           ),
@@ -265,19 +280,21 @@ class _IDAuthState extends State<IDAuth> {
           padding: const EdgeInsets.all(16.0),
           width: MediaQuery.of(context).size.width - 50,
           child: TextField(
+            textAlign: TextAlign.center,
             controller: _textCtrl,
             textInputAction: TextInputAction.go,
             onSubmitted: (string) => authManager.verifyAuth(
                 context, setState, _textCtrl.text, authType.uniqueID),
             enableSuggestions: false,
-            decoration: const InputDecoration(
-                border: OutlineInputBorder(borderSide: BorderSide())),
+            decoration:
+                TextInputStyle.genericField("UID", context, center: true),
           ),
         ),
         TextButton(
             onPressed: () => authManager.verifyAuth(
                 context, setState, _textCtrl.text, authType.uniqueID),
-            child: const Text("Verify ID"))
+            style: ButtonStyles.buttonVerify(context),
+            child: const Text("Verify"))
       ],
     );
   }
@@ -314,25 +331,30 @@ class _FinishAuthState extends State<FinishAuth> {
         height: MediaQuery.of(context).size.height - 400,
         child: ListView(
           children: List.generate(3, (index) {
-            return CheckboxListTile(
-                title: Text(_idToName[_items[index]]),
-                value: AuthManager.checkList[_items[index]],
-                onChanged: null);
+            bool _itemChecked = AuthManager.checkList[_items[index]];
+            Color _color = _itemChecked ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.error;
+            return ListTile(
+                title: Text(_idToName[_items[index]], style: TextStyles.textDefaultStyle(context, color: _color),),
+                trailing: Icon(
+                  _itemChecked ? Icons.check : Icons.close,
+                  color: _color,
+                ),
+                );
           }),
         ),
       ),
       TextButton(
           onPressed: () {
-            if (!AuthManager.checkList.values.contains(false) || true) { //TODO: reset
+            if (!AuthManager.checkList.values.contains(false)) {
               Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const VotePage()),
                   (route) => false);
             }
           },
-          child: Text(
+          style: ButtonStyles.buttonContinue(context),
+          child: const Text(
             "Connect",
-            style: TextStyles.textDefaultStyle(),
           ))
     ]);
   }

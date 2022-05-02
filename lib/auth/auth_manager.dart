@@ -7,6 +7,17 @@ import 'package:flutter/material.dart';
 import 'package:evoteapp/auth/auth_api_wrapper.dart';
 import 'package:evoteapp/auth/validation/field_validations.dart';
 
+SnackBar defaultSnackBar(BuildContext context, {required String content}) {
+  return SnackBar(
+    content: Text(content, textAlign: TextAlign.center,),
+    backgroundColor: Theme.of(context).colorScheme.error,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+    padding: const EdgeInsets.all(20.0),
+    behavior: SnackBarBehavior.floating,
+    margin: const EdgeInsets.all(20.0),
+  );
+}
+
 class AuthManager {
   final CryptoFunctions crypt = CryptoFunctions();
 
@@ -31,7 +42,6 @@ class AuthManager {
   }
 
   Future<Map?> fetchVoteForm() async {
-    init('192.168.1.33', 5000);//TODO: reset
     AuthResponse? _response = await authApi?.getVoteForm();
 
     if (_response?.status == reqStatus.success) {
@@ -119,18 +129,21 @@ class AuthManager {
         if (_response?.type == resType.valid) {
           Navigator.pushAndRemoveUntil(context, pageRoute, (route) => false);
         } else if (_response?.type == resType.error) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(_response?.content['message']),
+          ScaffoldMessenger.of(context).showSnackBar(defaultSnackBar(
+            context,
+            content: _response?.content['message'],
           ));
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Request failed"),
+        ScaffoldMessenger.of(context).showSnackBar(defaultSnackBar(
+          context,
+          content: "Request failed",
         ));
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(_errorList.first),
+      ScaffoldMessenger.of(context).showSnackBar(defaultSnackBar(
+        context,
+        content: _errorList.first,
       ));
     }
   }
@@ -160,18 +173,21 @@ class AuthManager {
         if (_response?.type == resType.valid) {
           state(() {});
         } else if (_response?.type == resType.error) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(_response?.content['message']),
+          ScaffoldMessenger.of(context).showSnackBar(defaultSnackBar(
+            context,
+            content: _response?.content['message'],
           ));
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text("Request Failed"),
+        ScaffoldMessenger.of(context).showSnackBar(defaultSnackBar(
+          context,
+          content: "Request Failed",
         ));
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(_validResult.errors.first),
+      ScaffoldMessenger.of(context).showSnackBar(defaultSnackBar(
+        context,
+        content: _validResult.errors.first,
       ));
     }
   }
@@ -184,8 +200,9 @@ class AuthManager {
 
     if (_response?.status == reqStatus.success) {
       if (_response?.type == resType.valid) {
-          _pageContent['title'] = 'Vote Cast';
-          _pageContent['message'] = 'Vote has been successfully cast. You can close the app now.';
+        _pageContent['title'] = 'Vote Cast';
+        _pageContent['message'] =
+            'Vote has been successfully cast. You can close the app now.';
       } else if (_response?.type == resType.error) {
         _pageContent['title'] = 'Error Casting Vote';
         _pageContent['message'] = _response?.content['message'];

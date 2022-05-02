@@ -304,27 +304,26 @@ User data
    <summary>Expand</summary>
 
 1. Client
-    - [ ] Login
-        - [x] Server Address Field
-        - [ ] Save Server Address
-        - [x] Interface
-        - [ ] Implementation
-    - [ ] Main Authentication
-        - [ ] Interface
-            - [ ] On-Device TOTP
-            - [ ] Secondary TOTP
-            - [ ] Government Auth
-        - [ ] Functionality
-            - [ ] On-Device TOTP
-            - [ ] Secondary TOTP
-        - [ ] Government Auth
-    - [ ] Vote Form
-        - [ ] Interface
-        - [ ] Fetch
-    - [ ] Security
-        - [ ] Encryption
-        - [ ] TLS
-    - [ ] Prettification
+    - [x] Login
+      - [x] Server Address Field
+      - [x] Save Server Address
+      - [x] Interface
+      - [x] Implementation
+    - [x] Main Authentication
+      - [x] Interface
+        - [x] On-Device TOTP
+        - [x] Secondary TOTP
+        - [x] UID Auth
+      - [ ] Functionality
+        - [x] On-Device TOTP
+        - [x] Secondary TOTP
+        - [ ] UID Auth
+    - [x] Vote Form
+      - [x] Interface
+      - [x] Fetch
+    - [x] Security
+      - [x] Encryption
+    - [x] Prettification
 2. Server
     - [ ] Request Handling
      - [x] Login

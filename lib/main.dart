@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:evoteapp/components/styles.dart';
 import 'package:evoteapp/screens/login.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -37,9 +38,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-          primarySwatch: Colors.blue,
-          appBarTheme: const AppBarTheme(backgroundColor: Colors.black)),
+      theme: ThemeData(colorSchemeSeed: const Color(0xFF9FC2CC)),
+      darkTheme: ThemeData(
+          brightness: Brightness.dark,
+          colorSchemeSeed: const Color(0xFF9FC2CC)),
+      themeMode: ThemeMode.system,
       home: const LoginPage(),
     );
   }

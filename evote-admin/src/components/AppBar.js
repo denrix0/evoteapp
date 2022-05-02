@@ -6,7 +6,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import TemporaryDrawer from "./AppDrawer";
 
-export default function ButtonAppBar(setPage) {
+export default function ButtonAppBar({ setPage }) {
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static">

@@ -1,7 +1,6 @@
 // import { useEffect, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis } from "recharts";
 import Grid from "@mui/material/Grid";
-import Container from "@mui/material/Container";
 import CompWindow from "../components/CompWindow";
 
 export default function VoteManagement() {
@@ -49,8 +48,8 @@ export default function VoteManagement() {
           </BarChart>
         </CompWindow>
       </Grid>
-      <Grid item xs={2}>
-        <CompWindow title={"Ongoing Poll"}></CompWindow>
+      <Grid item xs={6}>
+        <CompWindow title={"Voting Configuration"}></CompWindow>
       </Grid>
     </Grid>
   );

@@ -14,7 +14,7 @@
 *.iml
 *.ipr
 *.iws
-.idea/
+/app/.idea/
 
 # The .vscode folder contains launch configuration and tasks you configure in
 # VS Code which you may wish to be included in version control, so this line
@@ -22,39 +22,60 @@
 #.vscode/
 
 # Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
-.pub-cache/
-.pub/
-/build/
+/app/**/doc/api/
+/app/**/ios/Flutter/.last_build_id
+/app/.dart_tool/
+/app/.flutter-plugins
+/app/.flutter-plugins-dependencies
+/app/.packages
+/app/.pub-cache/
+/app/.pub/
+/app/build/
 
 # Web related
-lib/generated_plugin_registrant.dart
+/app/lib/generated_plugin_registrant.dart
 
 # Symbolication related
-app.*.symbols
+/app/app.*.symbols
 
 # Obfuscation related
-app.*.map.json
+/app/app.*.map.json
 
 # Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+/app/android/app/debug
+/app/android/app/profile
+/app/android/app/release
 
 # Python Venv and Brownie
-/serverside/votestorage/build
-/serverside/Lib
-/serverside/Scripts
-/serverside/Include
-/serverside/pyvenv.cfg
+/server/votestorage/build
+/server/venv
 
 # Random Files
-/serverside/brownie_dump.json
-/serverside/voter_dump.json
-/serverside/voterid/secrets.json
-/serverside/ssl_stuff
+/server/brownie_dump.json
+/server/voter_dump.json
+/server/voterid/secrets.json
+/server/ssl_stuff
+
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/evote-admin/node_modules
+/evote-admin/.pnp
+/evote-admin/.pnp.js
+
+# testing
+/evote-admin/coverage
+
+# production
+/evote-admin/build
+
+# misc
+/evote-admin/.DS_Store
+/evote-admin/.env.local
+/evote-admin/.env.development.local
+/evote-admin/.env.test.local
+/evote-admin/.env.production.local
+
+/evote-admin/npm-debug.log*
+/evote-admin/yarn-debug.log*
+/evote-admin/yarn-error.log*

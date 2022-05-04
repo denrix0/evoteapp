@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/android.iml" filepath="$PROJECT_DIR$/.idea/modules/android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/android.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/android.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/-638875598/android.flutter_plugin_android_lifecycle.iml" filepath="$PROJECT_DIR$/.idea/modules/-638875598/android.flutter_plugin_android_lifecycle.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/-777201672/android.local_auth.iml" filepath="$PROJECT_DIR$/.idea/modules/-777201672/android.local_auth.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/1373926175/android.path_provider_android.iml" filepath="$PROJECT_DIR$/.idea/modules/1373926175/android.path_provider_android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/-1946698586/android.shared_preferences_android.iml" filepath="$PROJECT_DIR$/.idea/modules/-1946698586/android.shared_preferences_android.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/1185047831/android.wakelock.iml" filepath="$PROJECT_DIR$/.idea/modules/1185047831/android.wakelock.iml" />
+    </modules>
+  </component>
+</project>

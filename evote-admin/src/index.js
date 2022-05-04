@@ -5,7 +5,6 @@ import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import VoteManagement from "./routes/VoteManagement";
 import UserPage from "./routes/UserPage";
-import SupportPage from "./routes/SupportPage";
 import App from "./App";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
@@ -16,13 +15,12 @@ root.render(
         <Route path="/" element={<App />}>
           <Route path="votes" element={<VoteManagement />} />
           <Route path="users" element={<UserPage />} />
-          <Route path="support" element={<SupportPage />} />
         </Route>
         <Route
           path="*"
           element={
             <main style={{ padding: "1rem" }}>
-              <p>There's nothing here!</p>
+              <p>Nothing to see here</p>
             </main>
           }
         />

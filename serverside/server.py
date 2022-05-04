@@ -3,6 +3,7 @@ import brownie
 
 from flask import Flask, jsonify, request
 from flask_restful import Resource, Api, reqparse
+from flask_cors import CORS
 from database_handling.mongodb_wrapper import MongoAPI
 from database_handling.sql_handling import db
 from brownie_functions import brownie_run, check_vote, store_voter_ids
@@ -25,6 +26,7 @@ from crypto_functions import (
 
 app = Flask(__name__)
 api = Api(app)
+CORS(app)
 mongo = MongoAPI()
 
 app.config["SQLALCHEMY_DATABASE_URI"] = config.SQL_URI

@@ -35,7 +35,7 @@ class FieldValidations {
         if (validIp(_serverField)) {
           _serverIP = _serverField;
         } else {
-          _errorList.add("Invalid IP address");
+          _errorList.add("Invalid Server");
         }
       } else {
         _errorList.add("Invalid Server address format");
@@ -99,7 +99,7 @@ class FieldValidations {
       _uid.replaceAll(' ', '');
 
       if (!RegExp(r'^[A-Za-z0-9_.]+$').hasMatch(_uid)) {
-        _errorList.add("This seems invalid");
+        _errorList.add("The UID is Invalid");
       }
     } else {
       _errorList.add("Field is empty");

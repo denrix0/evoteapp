@@ -71,3 +71,6 @@ class MongoAPI:
             id: User ID
         """
         self.user_data.delete_one({"user_id": id})
+
+    def clear_db(self):
+        self.user_data.drop()

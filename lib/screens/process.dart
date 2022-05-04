@@ -1,14 +1,14 @@
-import 'dart:async';
-
-import 'package:evoteapp/screens/vote.dart';
+import 'package:evoteapp/auth/validation/field_validations.dart';
 import 'package:flutter/material.dart';
 
-import 'package:evoteapp/components/structures.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
-import '../auth/auth_manager.dart';
-import '../components/styles.dart';
-import '../main.dart';
+import 'package:evoteapp/components/structures.dart';
+import 'package:evoteapp/components/styles.dart';
+import 'package:evoteapp/components/images.dart';
+import 'package:evoteapp/auth/auth_manager.dart';
+import 'package:evoteapp/screens/vote.dart';
+import 'package:evoteapp/main.dart';
 
 class AuthenticatePage extends StatefulWidget {
   const AuthenticatePage({Key? key}) : super(key: key);
@@ -29,16 +29,23 @@ class _AuthenticatePageState extends State<AuthenticatePage>
     });
   }
 
-  static List<StatefulWidget> pageItems = const [
-    OTPAuth(),
-    SecDeviceAuth(),
-    IDAuth(),
-    FinishAuth()
+  static final List _controllers = [
+    {"title": "TOTP", "type": authType.tOtp1},
+    {"title": "Secondary TOTP", "type": authType.tOtp2},
+    {"title": "Unique ID", "type": authType.uniqueID},
   ];
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
+
+    List<StatefulWidget> pageItems = List.generate(3, (index) {
+      Map currentPage = _controllers[index];
+      return AuthPage(title: currentPage["title"], aType: currentPage["type"]);
+    });
+
+    pageItems.add(const FinishAuth());
+
     return Scaffold(
         // resizeToAvoidBottomInset: false,
         appBar: AppBar(
@@ -104,15 +111,47 @@ class _AuthenticatePageState extends State<AuthenticatePage>
   bool get wantKeepAlive => true;
 }
 
-class OTPAuth extends StatefulWidget {
-  const OTPAuth({Key? key}) : super(key: key);
+class AuthPage extends StatefulWidget {
+  final String title;
+  final authType aType;
+  const AuthPage({Key? key, required this.title, required this.aType})
+      : super(key: key);
 
   @override
-  _OTPAuthState createState() => _OTPAuthState();
+  _AuthPage createState() => _AuthPage();
 }
 
-class _OTPAuthState extends State<OTPAuth> {
+class _AuthPage extends State<AuthPage> {
+  final GlobalKey<AuthImageState> _key = GlobalKey();
   final TextEditingController _textCtrl = TextEditingController();
+
+  Widget getTextField({bool code = true}) => code
+      ? PinCodeTextField(
+          controller: _textCtrl,
+          keyboardType: TextInputType.number,
+          textInputAction: TextInputAction.go,
+          beforeTextPaste: (code) {
+            ValidationResult _valid = FieldValidations.validateOtp(code!);
+            return _valid.errors.isEmpty;
+          },
+          autoDisposeControllers: false,
+          onSubmitted: (string) => authManager.verifyAuth(
+              context, _key, _textCtrl.text, widget.aType),
+          textStyle: TextStyles.textDefaultStyle(context),
+          pinTheme: TextInputStyle.pinTheme(context),
+          onChanged: (String value) {},
+          length: 6,
+          appContext: context,
+        )
+      : TextField(
+          textAlign: TextAlign.center,
+          controller: _textCtrl,
+          textInputAction: TextInputAction.go,
+          onSubmitted: (string) => authManager.verifyAuth(
+              context, _key, _textCtrl.text, widget.aType),
+          enableSuggestions: false,
+          decoration: TextInputStyle.genericField("", context, center: true),
+        );
 
   @override
   Widget build(BuildContext context) {
@@ -122,178 +161,25 @@ class _OTPAuthState extends State<OTPAuth> {
         Padding(
           padding: const EdgeInsets.all(32.0),
           child: Text(
-            'TOTP',
+            widget.title,
             style: TextStyles.textTitleStyle(),
             textAlign: TextAlign.center,
           ),
         ),
         Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Container(
             padding: const EdgeInsets.all(32.0),
-            decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: (AuthManager.checkList['totp1']
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.secondary)
-                    .withAlpha(200)),
-            child: Icon(
-              Icons.phone_android,
-              color: Colors.black,
-              size: MediaQuery.of(context).size.width - 200,
-            ),
-          ),
-        ),
+            child: AuthImage(
+              key: _key,
+              aType: widget.aType,
+            )),
         Container(
-          padding: const EdgeInsets.all(16.0),
-          width: MediaQuery.of(context).size.width - 50,
-          child: PinCodeTextField(
-            controller: _textCtrl,
-            keyboardType: TextInputType.number,
-            textInputAction: TextInputAction.go,
-            onSubmitted: (string) => authManager.verifyAuth(
-                context, setState, _textCtrl.text, authType.tOtp1),
-            textStyle: TextStyles.textDefaultStyle(context),
-            pinTheme: TextInputStyle.pinTheme(context),
-            onChanged: (String value) {},
-            length: 6,
-            appContext: context,
-          ),
-        ),
+            padding: const EdgeInsets.all(16.0),
+            width: MediaQuery.of(context).size.width - 50,
+            child: getTextField(code: widget.aType != authType.uniqueID)),
         TextButton(
             onPressed: () => authManager.verifyAuth(
-                context, setState, _textCtrl.text, authType.tOtp1),
-            style: ButtonStyles.buttonVerify(context), //verifyOTP(context),
-            child: const Text("Verify"))
-      ],
-    );
-  }
-}
-
-class SecDeviceAuth extends StatefulWidget {
-  const SecDeviceAuth({Key? key}) : super(key: key);
-
-  @override
-  _SecDeviceAuthState createState() => _SecDeviceAuthState();
-}
-
-class _SecDeviceAuthState extends State<SecDeviceAuth> {
-  final TextEditingController _textCtrl = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Text(
-            'Secondary TOTP',
-            style: TextStyles.textTitleStyle(),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Container(
-            padding: const EdgeInsets.all(32.0),
-            decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: (AuthManager.checkList['totp2']
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.secondary)
-                    .withAlpha(200)),
-            child: Icon(
-              Icons.more_horiz,
-              color: Colors.black,
-              size: MediaQuery.of(context).size.width - 200,
-            ),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.all(16.0),
-          width: MediaQuery.of(context).size.width - 50,
-          child: PinCodeTextField(
-            controller: _textCtrl,
-            textInputAction: TextInputAction.go,
-            textStyle: TextStyles.textDefaultStyle(context),
-            pinTheme: TextInputStyle.pinTheme(context),
-            keyboardType: TextInputType.number,
-            onSubmitted: (string) => authManager.verifyAuth(
-                context, setState, _textCtrl.text, authType.tOtp2),
-            onChanged: (String value) {},
-            length: 6,
-            appContext: context,
-          ),
-        ),
-        TextButton(
-            onPressed: () => authManager.verifyAuth(
-                context, setState, _textCtrl.text, authType.tOtp2),
-            style: ButtonStyles.buttonVerify(context),
-            child: const Text("Verify"))
-      ],
-    );
-  }
-}
-
-class IDAuth extends StatefulWidget {
-  const IDAuth({Key? key}) : super(key: key);
-
-  @override
-  _IDAuthState createState() => _IDAuthState();
-}
-
-class _IDAuthState extends State<IDAuth> {
-  final TextEditingController _textCtrl = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Text(
-            'Unique ID',
-            style: TextStyles.textTitleStyle(),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Container(
-            padding: const EdgeInsets.all(32.0),
-            decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: (AuthManager.checkList['uid']
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(context).colorScheme.secondary)
-                    .withAlpha(200)),
-            child: Icon(
-              Icons.perm_identity,
-              color: Colors.black,
-              size: MediaQuery.of(context).size.width - 200,
-            ),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.all(16.0),
-          width: MediaQuery.of(context).size.width - 50,
-          child: TextField(
-            textAlign: TextAlign.center,
-            controller: _textCtrl,
-            textInputAction: TextInputAction.go,
-            onSubmitted: (string) => authManager.verifyAuth(
-                context, setState, _textCtrl.text, authType.uniqueID),
-            enableSuggestions: false,
-            decoration:
-                TextInputStyle.genericField("UID", context, center: true),
-          ),
-        ),
-        TextButton(
-            onPressed: () => authManager.verifyAuth(
-                context, setState, _textCtrl.text, authType.uniqueID),
-            style: ButtonStyles.buttonVerify(context),
+                context, _key, _textCtrl.text, widget.aType),
+            style: ButtonStyles.defaultButton(context),
             child: const Text("Verify"))
       ],
     );
@@ -332,14 +218,19 @@ class _FinishAuthState extends State<FinishAuth> {
         child: ListView(
           children: List.generate(3, (index) {
             bool _itemChecked = AuthManager.checkList[_items[index]];
-            Color _color = _itemChecked ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.error;
+            Color _color = _itemChecked
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.error;
             return ListTile(
-                title: Text(_idToName[_items[index]], style: TextStyles.textDefaultStyle(context, color: _color),),
-                trailing: Icon(
-                  _itemChecked ? Icons.check : Icons.close,
-                  color: _color,
-                ),
-                );
+              title: Text(
+                _idToName[_items[index]],
+                style: TextStyles.textDefaultStyle(context, color: _color),
+              ),
+              trailing: Icon(
+                _itemChecked ? Icons.check : Icons.close,
+                color: _color,
+              ),
+            );
           }),
         ),
       ),
@@ -350,11 +241,16 @@ class _FinishAuthState extends State<FinishAuth> {
                   context,
                   MaterialPageRoute(builder: (context) => const VotePage()),
                   (route) => false);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBarStyles.errorSnackBar(context,
+                      content:
+                          "All Authentication Methods need to be verified"));
             }
           },
-          style: ButtonStyles.buttonContinue(context),
+          style: ButtonStyles.defaultButton(context),
           child: const Text(
-            "Connect",
+            "Continue",
           ))
     ]);
   }

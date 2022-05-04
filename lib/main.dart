@@ -1,13 +1,12 @@
 import 'dart:io';
 
-import 'package:evoteapp/components/styles.dart';
-import 'package:evoteapp/screens/login.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:logging/logging.dart';
 
-import 'auth/auth_manager.dart';
+import 'package:evoteapp/screens/login.dart';
+import 'package:evoteapp/auth/auth_manager.dart';
 
 AuthManager authManager = AuthManager();
 
@@ -22,6 +21,7 @@ void main() {
   runApp(const MyApp());
 }
 
+//TODO: Remove HTTPCheck override
 class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {

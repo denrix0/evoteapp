@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
@@ -8,16 +9,7 @@ class ButtonStyles {
         textStyle: MaterialStateProperty.all(TextStyles.textButtonStyle()));
   }
 
-  static ButtonStyle buttonContinue(BuildContext context) {
-    return ButtonStyle(
-        textStyle: MaterialStateProperty.all(TextStyles.textButtonStyle()),
-        foregroundColor: MaterialStateProperty.all(Theme.of(context).colorScheme.background),
-        backgroundColor: MaterialStateProperty.all(Theme.of(context).colorScheme.primary),
-        padding: MaterialStateProperty.all(
-            const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0)));
-  }
-
-  static ButtonStyle buttonVerify(BuildContext context) {
+  static ButtonStyle defaultButton(BuildContext context) {
     return ButtonStyle(
         textStyle: MaterialStateProperty.all(TextStyles.textButtonStyle()),
         foregroundColor: MaterialStateProperty.all(Theme.of(context).colorScheme.background),
@@ -68,6 +60,19 @@ class TextInputStyle {
       fieldWidth: 50,
       shape: PinCodeFieldShape.box,
       borderRadius: BorderRadius.circular(8.0)
+    );
+  }
+}
+
+class SnackBarStyles {
+  static SnackBar errorSnackBar(BuildContext context, {required String content}) {
+    return SnackBar(
+      content: Text(content, textAlign: TextAlign.center,),
+      backgroundColor: Theme.of(context).colorScheme.error,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
+      padding: const EdgeInsets.all(20.0),
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.all(20.0),
     );
   }
 }

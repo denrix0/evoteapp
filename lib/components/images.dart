@@ -1,6 +1,7 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+
+import 'package:evoteapp/auth/auth_manager.dart';
+import 'package:evoteapp/components/structures.dart';
 
 class VoteImage extends StatelessWidget {
   const VoteImage({Key? key}) : super(key: key);
@@ -30,3 +31,46 @@ class VoteImage extends StatelessWidget {
     );
   }
 }
+
+class AuthImage extends StatefulWidget {
+  final authType aType;
+
+  const AuthImage({Key? key, required this.aType}) : super(key: key);
+
+  @override
+  State<AuthImage> createState() => AuthImageState();
+}
+
+class AuthImageState extends State<AuthImage> {
+  late IconData authIcon;
+
+  @override
+  Widget build(BuildContext context) {
+    switch (widget.aType) {
+      case authType.tOtp1:
+        authIcon = Icons.phone_android;
+        break;
+      case authType.tOtp2:
+        authIcon = Icons.more_horiz;
+        break;
+      case authType.uniqueID:
+        authIcon = Icons.perm_identity;
+        break;
+    }
+    return Container(
+      padding: const EdgeInsets.all(32.0),
+      decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: (AuthManager.checkList[widget.aType.typeString]
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.secondary)
+              .withAlpha(200),),
+      child: Icon(
+        authIcon,
+        color: Colors.black,
+        size: MediaQuery.of(context).size.width - 200,
+      ),
+    );
+  }
+}
+

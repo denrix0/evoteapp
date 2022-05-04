@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../auth/auth_manager.dart';
-import '../auth/validation/crypto_functions.dart';
-import '../components/styles.dart';
-import '../main.dart';
-import 'confirmation.dart';
+import 'package:evoteapp/auth/auth_manager.dart';
+import 'package:evoteapp/auth/validation/crypto_functions.dart';
+import 'package:evoteapp/components/styles.dart';
+import 'package:evoteapp/main.dart';
+import 'package:evoteapp/screens/confirmation.dart';
 
 class VotePage extends StatefulWidget {
   const VotePage({Key? key}) : super(key: key);
@@ -104,7 +104,7 @@ class _VotePageState extends State<VotePage> {
                             ));
                           }
                         },
-                        style: ButtonStyles.buttonContinue(context),
+                        style: ButtonStyles.defaultButton(context),
                         child: const Text("Vote"))
                         : const Text("Not loaded")
                   ],

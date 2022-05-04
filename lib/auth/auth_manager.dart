@@ -1,22 +1,12 @@
 import 'dart:async';
 
-import 'package:evoteapp/auth/validation/crypto_functions.dart';
-import 'package:evoteapp/components/structures.dart';
 import 'package:flutter/material.dart';
 
+import 'package:evoteapp/auth/validation/crypto_functions.dart';
+import 'package:evoteapp/components/structures.dart';
+import 'package:evoteapp/components/styles.dart';
 import 'package:evoteapp/auth/auth_api_wrapper.dart';
 import 'package:evoteapp/auth/validation/field_validations.dart';
-
-SnackBar defaultSnackBar(BuildContext context, {required String content}) {
-  return SnackBar(
-    content: Text(content, textAlign: TextAlign.center,),
-    backgroundColor: Theme.of(context).colorScheme.error,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16.0)),
-    padding: const EdgeInsets.all(20.0),
-    behavior: SnackBarBehavior.floating,
-    margin: const EdgeInsets.all(20.0),
-  );
-}
 
 class AuthManager {
   final CryptoFunctions crypt = CryptoFunctions();
@@ -30,6 +20,7 @@ class AuthManager {
   AuthManager._internal();
 
   static AuthAPI? authApi;
+  static String? userId;
   String? _jwt;
   String? _pubKey;
 
@@ -127,21 +118,23 @@ class AuthManager {
 
       if (_response?.status == reqStatus.success) {
         if (_response?.type == resType.valid) {
+          userId = _cred.data['id'];
           Navigator.pushAndRemoveUntil(context, pageRoute, (route) => false);
         } else if (_response?.type == resType.error) {
-          ScaffoldMessenger.of(context).showSnackBar(defaultSnackBar(
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBarStyles.errorSnackBar(
             context,
             content: _response?.content['message'],
           ));
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(defaultSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBarStyles.errorSnackBar(
           context,
-          content: "Request failed",
+          content: "Request Failed",
         ));
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(defaultSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBarStyles.errorSnackBar(
         context,
         content: _errorList.first,
       ));
@@ -149,7 +142,7 @@ class AuthManager {
   }
 
   void verifyAuth(
-      BuildContext context, state, String text, authType type) async {
+      BuildContext context, GlobalKey key, String text, authType type) async {
     Map _params = {'type': type.typeString};
     ValidationResult _validResult;
 
@@ -171,21 +164,23 @@ class AuthManager {
 
       if (_response?.status == reqStatus.success) {
         if (_response?.type == resType.valid) {
-          state(() {});
+          // ignore: invalid_use_of_protected_member
+          key.currentState?.setState(() {});
         } else if (_response?.type == resType.error) {
-          ScaffoldMessenger.of(context).showSnackBar(defaultSnackBar(
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBarStyles.errorSnackBar(
             context,
             content: _response?.content['message'],
           ));
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(defaultSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBarStyles.errorSnackBar(
           context,
           content: "Request Failed",
         ));
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(defaultSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBarStyles.errorSnackBar(
         context,
         content: _validResult.errors.first,
       ));
@@ -210,7 +205,7 @@ class AuthManager {
         _pageContent['error'] = "Could not cast vote: ???";
       }
     } else {
-      _pageContent['error'] = "Could not cast vote: Request failed.";
+      _pageContent['error'] = "Could not cast vote: Request Failed.";
     }
 
     return _pageContent;

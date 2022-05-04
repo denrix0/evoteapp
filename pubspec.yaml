@@ -43,6 +43,7 @@ dependencies:
       url: https://github.com/leocavalcante/encrypt.git
       ref: 5.x
   pin_code_fields: ^7.4.0
+  flutter_email_sender: ^5.1.0
 
 
 dev_dependencies:

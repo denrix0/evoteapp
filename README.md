@@ -314,35 +314,36 @@ User data
         - [x] On-Device TOTP
         - [x] Secondary TOTP
         - [x] UID Auth
-      - [ ] Functionality
+      - [x] Functionality
         - [x] On-Device TOTP
         - [x] Secondary TOTP
-        - [ ] UID Auth
+        - [x] UID Auth
     - [x] Vote Form
       - [x] Interface
       - [x] Fetch
+      - [x] Contact Support
     - [x] Security
       - [x] Encryption
     - [x] Prettification
 2. Server
     - [ ] Request Handling
      - [x] Login
-     - [x] Authentication
+     - [ ] Authentication
        - [x] On-Device TOTP
        - [x] Secondary TOTP
-       - [x] Unique ID Auth
+       - [ ] Unique ID Auth
      - [x] Voting
        - [x] Form
        - [x] Submission
      - [ ] Vote Management
    - [ ] Make Auth Methods Selectable
-   - [ ] Blokchain
+   - [ ] Blockchain
      - [x] Count votes
      - [x] Store Voted IDs
      - [ ] Authorize Nodes (Probably works, can't test)
    - [ ] Security
      - [x] RSA + AES Key Sharing
-     - [x]] Encrypt data with server key
+     - [x] Encrypt data with server key
      - [x] HTTPS
      - [x] Hash & Salt PIN
      - [ ] Remove temporary files on shutdown

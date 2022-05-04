@@ -1,10 +1,11 @@
-import 'package:evoteapp/components/images.dart';
-import 'package:evoteapp/screens/process.dart';
 import 'package:flutter/material.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../components/styles.dart';
-import '../main.dart';
+import 'package:evoteapp/components/images.dart';
+import 'package:evoteapp/screens/process.dart';
+import 'package:evoteapp/components/styles.dart';
+import 'package:evoteapp/main.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -83,6 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: TextField(
                     controller: _pinCtrl,
                     textInputAction: TextInputAction.go,
+                    obscureText: true,
                     onSubmitted: (string) => authManager.authLogin(
                         context,
                         _serverField.text,
@@ -101,7 +103,7 @@ class _LoginPageState extends State<LoginPage> {
                           _pinCtrl.text,
                           MaterialPageRoute(
                               builder: (context) => const AuthenticatePage())),
-                    style: ButtonStyles.buttonContinue(context),
+                    style: ButtonStyles.defaultButton(context),
                     child: const Text("Login"))
               ],
             ),

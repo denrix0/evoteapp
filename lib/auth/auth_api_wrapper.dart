@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:core';
-import 'package:evoteapp/components/structures.dart';
+
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
+
+import 'package:evoteapp/components/structures.dart';
 
 class AuthAPI {
   static late Map baseUri;
@@ -58,15 +60,6 @@ class AuthAPI {
     }
 
     return _response;
-  }
-
-  Future checkApiAlive() async {
-    try {
-      await _sendApiRequest('/', reqMethod.get);
-      return reqStatus.success;
-    } on Exception {
-      return reqStatus.fail;
-    }
   }
 
   Future getVoteForm() async {

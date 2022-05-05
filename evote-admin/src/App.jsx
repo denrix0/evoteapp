@@ -11,6 +11,6 @@ export default function App() {
       </div>
     );
   } else {
-    return <Navigate replace to="/votes" />;
+    return <Navigate replace to="/voting" />;
   }
 }

@@ -8,6 +8,7 @@
     "@testing-library/user-event": "^13.2.1",
     "dotenv": "^16.0.0",
     "hamburger-react": "^2.5.0",
+    "mysql": "^2.18.1",
     "prop-types": "^15.8.1",
     "ra-data-json-server": "^4.0.0",
     "react": "^18.0.0",

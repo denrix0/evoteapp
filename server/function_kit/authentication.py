@@ -1,5 +1,5 @@
 from enum import Enum
-from database_handling.sql_handling import fetch_entry
+from database_handling.sql_handling import VoteUser
 
 import crypto_functions as cryp
 import pyotp
@@ -33,7 +33,7 @@ class AuthenticationException(Exception):
 
 
 def authenticate_login(id, pin):
-    entry = fetch_entry(id=id)
+    entry = VoteUser.fetch_entry(id=id)
 
     response = False
     message = "None"
@@ -50,7 +50,7 @@ def authenticate_login(id, pin):
 
 
 def validate_totp(id, auth_type, token):
-    entry = fetch_entry(id=id)
+    entry = VoteUser.fetch_entry(id=id)
 
     totp_secret = entry.totp1 if auth_type == AuthType.TOTP1 else entry.totp2
 

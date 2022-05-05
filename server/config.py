@@ -23,8 +23,3 @@ SQL_SECRET = getenv("SQL_SECRET")
 JWT_SECRET = getenv("JWT_SECRET")
 
 OWNER_IP = getenv("OWNER_IP")
-
-# Retrieve Voting Config
-from database_handling.sql_config_fetch import VoteConfig
-
-vote_config = VoteConfig()

@@ -5,7 +5,7 @@ from flask import Flask, jsonify, request
 from flask_restful import Resource, Api, reqparse
 from flask_cors import CORS
 from database_handling.mongodb_wrapper import MongoAPI
-from database_handling.sql_handling import db
+from database_handling.sql_handling import db, VoteCfg
 from brownie_functions import brownie_run, check_vote, store_voter_ids
 from authentication import (
     AuthType,
@@ -47,18 +47,21 @@ with app.app_context():
 
 class Home(Resource):
     def get(self):
+        VoteCfg.fetch_vote_config()
         return jsonify({"message": "Nothing to see here"})
 
 
 class Login(Resource):
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("id")
+        parser.argument("id")
         parser.add_argument("pin")
         argsr = parser.parse_args()
 
         id = argsr["id"]
         pin = argsr["pin"]
+
+        vote_config = VoteCfg.fetch_vote_config()
 
         try:
             if not id.isdigit() or (" " in id):
@@ -67,7 +70,7 @@ class Login(Resource):
             if (len(pin) < 8) or (" " in pin):
                 raise AuthenticationException("invalid_pin", "The pin is invalid")
 
-            if not config.vote_config.ongoing:
+            if not vote_config["ongoing"]:
                 raise AuthenticationException(
                     "no_vote", "There is no vote ongoing as of now"
                 )
@@ -125,6 +128,8 @@ class Auth(Resource):
         parser.add_argument("iv")
         argsr = parser.parse_args()
 
+        vote_config = VoteCfg.fetch_vote_config()
+
         try:
             auth_type = argsr["auth_type"]
             auth_content = argsr["auth_content"]
@@ -136,7 +141,7 @@ class Auth(Resource):
 
             pvt_key = mongo.fetch_user_data(id, data="msg_key")
 
-            if not config.vote_config.ongoing:
+            if not vote_config["ongoing"]:
                 raise AuthenticationException(
                     "no_vote", "There is no vote ongoing as of now"
                 )
@@ -150,7 +155,7 @@ class Auth(Resource):
 
                 auth_content = AESKey.decrypt(auth_content, key=key, iv=iv)
 
-                if auth_type in config.vote_config.req_methods:
+                if auth_type in vote_config["req_methods"]:
                     auth_type = AuthType(auth_type)
                     authenticated = False
 
@@ -217,16 +222,21 @@ class Auth(Resource):
 
 class GetVoteForm(Resource):
     def get(self):
+
+        vote_config = VoteCfg.fetch_vote_config()
+
         form = {
-            "prompt": config.vote_config.prompt,
-            "options": config.vote_config.options,
+            "prompt": vote_config["prompt"],
+            "options": vote_config["options"],
         }
         return jsonify(form)
 
 
-class MgmtPage(Resource):
+class VoteStatus(Resource):
     def get(self):
-        option_list = config.vote_config.options
+        vote_config = VoteCfg.fetch_vote_config()
+
+        option_list = vote_config["options"]
 
         data = brownie_run(
             method="get_option_values", kwargs={"option_list": option_list}
@@ -249,6 +259,8 @@ class SubmitVote(Resource):
         key = argsr["enc_key"]
         iv = argsr["iv"]
 
+        vote_config = VoteCfg.fetch_vote_config()
+
         jwtoken = request.headers["Authorization"].replace("Bearer ", "")
 
         id, response = JWT.verify(jwtoken)
@@ -261,7 +273,7 @@ class SubmitVote(Resource):
                     "already_voted", "There is already a vote cast from this id"
                 )
 
-            if not config.vote_config.ongoing:
+            if not vote_config["ongoing"]:
                 raise AuthenticationException(
                     "no_vote", "There is no vote ongoing as of now"
                 )
@@ -282,7 +294,7 @@ class SubmitVote(Resource):
                     uid=tokens["uid"], totp1=tokens["totp1"], totp2=tokens["totp2"]
                 )
 
-                if option not in config.vote_config.options:
+                if option not in vote_config["options"]:
                     raise AuthenticationException(
                         "invaid_option", "That is an invalid option."
                     )
@@ -319,7 +331,7 @@ api.add_resource(Auth, "/auth_verify")
 api.add_resource(Login, "/login")
 api.add_resource(GetVoteForm, "/vote_form")
 api.add_resource(SubmitVote, "/submit")
-api.add_resource(MgmtPage, "/mgmt_page")
+api.add_resource(VoteStatus, "/vote_status")
 
 
 if __name__ == "__main__":

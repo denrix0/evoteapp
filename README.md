@@ -335,40 +335,30 @@ User data
      - [x] Voting
        - [x] Form
        - [x] Submission
-     - [ ] Vote Management
+       - [x] Vote Status
    - [ ] Make Auth Methods Selectable
    - [ ] Blockchain
      - [x] Count votes
      - [x] Store Voted IDs
-     - [ ] Authorize Nodes (Probably works, can't test)
+     - [ ] Authorize Nodes (Probably works?)
    - [ ] Security
      - [x] RSA + AES Key Sharing
      - [x] Encrypt data with server key
      - [x] HTTPS
      - [x] Hash & Salt PIN
-     - [ ] Remove temporary files on shutdown
+     - [x] Remove temporary files script
      - [ ] MySQL User Permissions
    - [x] Tests
 3. Vote Management
    - [ ] Vote Dashboard
      - [ ] Vote Control (Owner only)
-     - [ ] Bar chart
+     - [x] Bar chart
      - [ ] Configure (Owner only)
    - [ ] Users
      - [ ] Add
      - [ ] Delete
-   - [ ] Vote Support
-     - [ ] View Tickets
-     - [ ] Remove Tickets
-   - [ ] Security
-     - [ ] TLS
-     - [ ] JWT
+   - [x] Security
+     - [x] TLS
    - [ ] Prettification
 
-</details>
-
-## ???
-<details>
-   <summary>Expand</summary>
-   1. https://cs.brown.edu/research/pubs/theses/capstones/2019/polshakova.nina.pdf
 </details>

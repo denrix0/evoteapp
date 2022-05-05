@@ -10,10 +10,9 @@ import Toolbar from "@mui/material/Toolbar";
 
 const ResponsiveAppBar = () => {
   const location = useLocation().pathname;
-  console.log(process.env);
   const userToName = {
-    evote_node: "NODE",
-    evote_owner: "OWNER",
+    node: "NODE",
+    owner: "OWNER",
   };
 
   return (
@@ -26,7 +25,7 @@ const ResponsiveAppBar = () => {
           }}
         >
           <ButtonGroup variant="contained" sx={{ backgroundColor: "#251D3A" }}>
-            {["votes", "users"].map((page) => {
+            {["voting", "users"].map((page) => {
               const locPage = location === "/" + page;
               return (
                 <Link
@@ -46,7 +45,7 @@ const ResponsiveAppBar = () => {
                       marginX: "1em",
                     }}
                   >
-                    <Typography textAlign="center" variant="h6">
+                    <Typography textAlign="center" variant="h5">
                       {page.charAt(0).toUpperCase() + page.slice(1)}
                     </Typography>
                   </Button>

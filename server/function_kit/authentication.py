@@ -1,7 +1,7 @@
 from enum import Enum
 from database_handling.sql_handling import VoteUser
 
-import crypto_functions as cryp
+import function_kit.crypto_functions as cryp
 import pyotp
 import jwt
 import config

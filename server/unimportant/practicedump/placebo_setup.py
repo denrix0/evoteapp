@@ -1,6 +1,6 @@
 import mysql.connector
 
-from crypto_functions import PinHash, ServerKey
+from function_kit.crypto_functions import PinHash, ServerKey
 from practicedump.totptest import PyTOTP
 import pyotp
 import pickle
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     print(otp.get_totp_string(secret=totp1_secret))
     print(otp.get_totp_string(secret=totp2_secret))
 
-    # write_temp_settings(cursor)
+    write_temp_settings(cursor)
 
     db.commit()
     db.close()

@@ -4,7 +4,7 @@ sample text
 ## Tools Intended to be Used in Deployment
 - Flutter
 - MongoDB + MySQL
-- NextJS
+- ReactJS
 - Flask + Brownie
 - Solidity
 ## Data on Server
@@ -44,7 +44,6 @@ sample text
 
 
 ## Process
-
 1. Creating a User
    1. Create user with id and pin
    2. Generate TOTPs
@@ -69,193 +68,132 @@ sample text
    2. On-Device TOTP Authentication (Any Device)
    3. Secondary Device TOTP Authentication (Any Device)
 2. ### API
-   1. Login
+   1. Client Interface
+      1. Login (/login)
+         1. Request Example
+            ```
+            POST /cgi-bin/process.cgi HTTP/1.1
+            {
+               "id": int,
+               "pin": string
+            }
+            ```
+         2. Response Example
+            ```
+            {
+               "jwt": string,
+               "pub_key": string
+            }
+            ```
+      2. Standard Auth (/auth_verify)
+         1. Request Example
+            ```
+            POST /cgi-bin/process.cgi HTTP/1.1
+            Authorization: Bearer <jwt>
+            {
+               "auth_type": string,
+               "auth_content": string,
+               "enc_key": string,
+               "iv": string
+            }
+            ``` 
+         2. Response Example
+            ```
+            {
+               "method: string,
+               "token": string
+            }
+            ```
+      3. Submit Form Auth (/submit)
+         1. Request Example
+            ```
+            POST /cgi-bin/process.cgi HTTP/1.1
+            Authorization: Bearer <jwt>
+            {
+               "master_token": string,
+               "form_option": string,
+               "enc_key": string,
+               "iv": string
+            }
+            ```
+         2. Response Example
+            ```
+            {
+               "vote_status": string,
+               "message": string
+            }
+            ```
+2. WebUI API
+   1. Vote Config
       1. Request Example
-         ```
-         POST /cgi-bin/process.cgi HTTP/1.1
-         {
-            "id": int,
-            "pin": string
-         }
-         ```
+            ```
+            POST /cgi-bin/process.cgi HTTP/1.1
+            {
+               "type": string,
+               "data": { ... }
+            }
+            ```
+            > Possible types : 'fetch', 'edit', 'reset' \
+            > 'data' field is only needed on 'edit' type
+            > ```
+            > "data": {
+            >      "property": string,
+            >      "value": string 
+            > }
+            >```
+
       2. Response Example
          ```
          {
-            "jwt": string,
-            "pub_key": string
+            "message": string,
+            "data": { <properties> }
          }
          ```
-   2. Standard Auth
+         > Message about what happened or something
+         > data field only if request type is 'fetch'
+   2. Vote User
       1. Request Example
-         ```
-         POST /cgi-bin/process.cgi HTTP/1.1
-         Authorization: Bearer <jwt>
-         {
-            "auth_type": string,
-            "auth_content": string,
-            "enc_key": string,
-            "iv": string
-         }
-         ``` 
+            ```
+            POST /cgi-bin/process.cgi HTTP/1.1
+            Authorization: Bearer <jwt>
+            {
+               "type": string,
+               "data": { ... }
+            }
+            ```
+            > Possible types : 'add', 'delete' \
+            > 'data' format per type: \
+            > \
+            > add:
+            > ```
+            > "data": {
+            >     "id": int,
+            >     "pin": string,
+            >     "totp1": string,
+            >     "totp2": string,
+            > }
+            > ```
+            > delete:
+            > ```
+            > "data": {
+            >     "id": int 
+            > }
+            > ```
       2. Response Example
          ```
          {
-            "method: string,
-            "token": string
-         }
-         ```
-   3. Submit Form Auth
-      1. Request Example
-         ```
-         POST /cgi-bin/process.cgi HTTP/1.1
-         Authorization: Bearer <jwt>
-         {
-            "master_token": string,
-            "form_option": string,
-            "enc_key": string,
-            "iv": string
-         }
-         ```
-      2. Response Example
-         ```
-         {
-            "vote_status": string,
             "message": string
          }
          ```
-   4. Management Page
-      1. Request
-         ```
-         POST /cgi-bin/process.cgi HTTP/1.1
-         Authorization: Bearer <jwt>
-         {
-            "request": string,
-            "sub_request" string,
-            "data": object
-         }
-         ```
-         > REQUEST - SUBREQUEST - DATA
-         > - vote_status
-         >    - start (owner only)
-         >    - end (owner only)
-         >    - count
-         > - vote_config
-         >    - fetch (owner only)
-         >    - edit (owner only)
-         >       ```
-         >       {
-         >          "vote_config": <vote_config format>,
-         >          "voting_form": <voting_form format>
-         >       }
-         >       ```
-         > - users
-         >    - add
-         >       ```
-         >       {  
-         >          "id": int,
-         >          "pin": string,
-         >          "totp1": string,
-         >          "totp2": string
-         >       }
-         >       ```
-         >    - fetch
-         >       ```
-         >       {
-         >          "page": int
-         >       }
-         >       ```
-         >    - delete
-         >       ```
-         >       {
-         >          "id": int
-         >       }
-         >       ```
-         > - support
-         >    - fetch
-         >       ```
-         >       {
-         >          "page": int
-         >       }
-         >       ```
-         >    - cancel
-         >       ```
-         >       {
-         >          "id": int
-         >       }
-         >      ```
-      2. Example Responses
-         - vote_status
-           - start
-               ```
-               {
-                  "message": "Vote started"
-               }
-               ```
-           - end
-               ```
-               {
-                  "message": "Vote ended"
-               }
-               ```
-           - count
-               ```
-               {
-                  <Option>: <Vote Count>
-                  ...
-               }
-               ```
-         - vote_config
-           - fetch
-               ```
-               {
-                  <vote_config> and <vote_form>
-               }
-               ``` 
-           - edit
-               ```
-               {
-                  "message": "Vote configuration changed"
-               }
-               ```
-         - users
-           - add
-               ```
-               {
-                  "message": "User added"
-               }
-               ```
-           - fetch
-               ```
-               {
-                  "users": [<array of user ids>]
-               }
-               ``` 
-           - delete
-               ```
-               {
-                  "message": "User deleted"
-               }
-               ```
-         - support
-           - fetch
-               ```
-               {
-                  "users": [<array of user ids>]
-               }
-               ```
-           - cancel
-               ```
-               {
-                  "message": "Support Request closed"
-               }
-               ```
-   5. Fail Example
-      ```
-      {
-         "error_type": string,
-         "message": string
-      }
-      ```
+         > Message about what happened or something
+         
+3. Fail Example
+   ```
+   {
+      "error_type": string,
+      "message": string
+   }
+   ```
 ## Data Structures
 ### MySQL
 > Stored only on owner machine \
@@ -275,7 +213,7 @@ Database - evoteapp
 2. 'voting_config' Table (Writable owner only)
    | name        | value                  |
    | ----------- | ---------------------- |
-   | prompt      | promptvalue            |
+   | prompt      | prompt content         |
    | options     | serialized options     |
    | req_methods | serialized method list |
    | expiry      | expiry in seconds      |
@@ -322,8 +260,6 @@ User data
       - [x] Interface
       - [x] Fetch
       - [x] Contact Support
-    - [x] Security
-      - [x] Encryption
     - [x] Prettification
 2. Server
     - [ ] Request Handling
@@ -341,24 +277,20 @@ User data
      - [x] Count votes
      - [x] Store Voted IDs
      - [ ] Authorize Nodes (Probably works?)
-   - [ ] Security
-     - [x] RSA + AES Key Sharing
-     - [x] Encrypt data with server key
-     - [x] HTTPS
-     - [x] Hash & Salt PIN
-     - [x] Remove temporary files script
-     - [ ] MySQL User Permissions
-   - [x] Tests
 3. Vote Management
-   - [ ] Vote Dashboard
-     - [ ] Vote Control (Owner only)
-     - [x] Bar chart
-     - [ ] Configure (Owner only)
-   - [ ] Users
-     - [ ] Add
-     - [ ] Delete
-   - [x] Security
-     - [x] TLS
-   - [ ] Prettification
+   - [x] WebUI Server API
+     - [x] Vote Config   
+     - [x] Vote User
+   - [ ] WebUI  
+     - [ ] Vote Dashboard
+       - [ ] Vote Control (Owner only)
+       - [x] Bar chart
+       - [ ] Configure (Owner only)
+     - [ ] Users
+       - [ ] Add
+       - [ ] Delete
+     - [x] Security
+       - [x] HTTPS
+     - [ ] Prettification
 
 </details>

@@ -1,7 +1,8 @@
 import pickle
+import ast
 
 from flask_sqlalchemy import SQLAlchemy
-from crypto_functions import PinHash, ServerKey
+from function_kit.crypto_functions import PinHash, ServerKey
 
 db = SQLAlchemy()
 
@@ -46,8 +47,7 @@ class VoteUser:
 
     @staticmethod
     def delete_entry(id):
-        user = VoteUser.fetch_entry(id)
-        db.session.delete(user)
+        UserDetails.query.filter_by(id=id).delete()
         db.session.commit()
 
 
@@ -58,7 +58,7 @@ class VoteCfg:
 
         properties = {
             "expiry": "600",
-            "ongoing": "1",
+            "ongoing": "0",
             "options": ["Option 0", "Option 1", "Option 2", "Option 3", "Option 4"],
             "prompt": "Sample Text",
             "req_methods": ["totp1", "totp2", "uid"],
@@ -73,6 +73,8 @@ class VoteCfg:
 
     @staticmethod
     def edit_config(setting, value):
+        if setting == "options":
+            value = pickle.dumps(ast.literal_eval(value)).hex()
         cfg = VotingConfig.query.filter_by(name=setting).first()
         cfg.value = value
         db.session.commit()

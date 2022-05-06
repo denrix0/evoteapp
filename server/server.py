@@ -6,8 +6,8 @@ from flask_restful import Resource, Api, reqparse
 from flask_cors import CORS
 from database_handling.mongodb_wrapper import MongoAPI
 from database_handling.sql_handling import db, VoteCfg
-from brownie_functions import brownie_run, check_vote, store_voter_ids
-from authentication import (
+from function_kit.brownie_functions import brownie_run, check_vote, store_voter_ids
+from function_kit.authentication import (
     AuthType,
     AuthenticationException,
     JWT,
@@ -16,7 +16,7 @@ from authentication import (
     validate_totp,
     validate_uid,
 )
-from crypto_functions import (
+from function_kit.crypto_functions import (
     AESKey,
     RSAKey,
     get_random,
@@ -47,7 +47,7 @@ with app.app_context():
 
 class Home(Resource):
     def get(self):
-        VoteCfg.fetch_vote_config()
+        VoteCfg.fetch_config()
         return jsonify({"message": "Nothing to see here"})
 
 
@@ -61,7 +61,7 @@ class Login(Resource):
         id = argsr["id"]
         pin = argsr["pin"]
 
-        vote_config = VoteCfg.fetch_vote_config()
+        vote_config = VoteCfg.fetch_config()
 
         try:
             if not id.isdigit() or (" " in id):
@@ -128,7 +128,7 @@ class Auth(Resource):
         parser.add_argument("iv")
         argsr = parser.parse_args()
 
-        vote_config = VoteCfg.fetch_vote_config()
+        vote_config = VoteCfg.fetch_config()
 
         try:
             auth_type = argsr["auth_type"]
@@ -223,7 +223,7 @@ class Auth(Resource):
 class GetVoteForm(Resource):
     def get(self):
 
-        vote_config = VoteCfg.fetch_vote_config()
+        vote_config = VoteCfg.fetch_config()
 
         form = {
             "prompt": vote_config["prompt"],
@@ -234,7 +234,7 @@ class GetVoteForm(Resource):
 
 class VoteStatus(Resource):
     def get(self):
-        vote_config = VoteCfg.fetch_vote_config()
+        vote_config = VoteCfg.fetch_config()
 
         option_list = vote_config["options"]
 
@@ -259,7 +259,7 @@ class SubmitVote(Resource):
         key = argsr["enc_key"]
         iv = argsr["iv"]
 
-        vote_config = VoteCfg.fetch_vote_config()
+        vote_config = VoteCfg.fetch_config()
 
         jwtoken = request.headers["Authorization"].replace("Bearer ", "")
 

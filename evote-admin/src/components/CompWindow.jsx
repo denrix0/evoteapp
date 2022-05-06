@@ -3,7 +3,12 @@ import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
 
 const CompWindow = ({ title, children }) => {
-  if (process.env.REACT_APP_SQL_USER === "owner" || title === "Poll Chart") {
+  if (
+    process.env.REACT_APP_SQL_USER === "owner" ||
+    title === "Poll Chart" ||
+    title === "Create User" ||
+    title === "Delete User"
+  ) {
     return (
       <Box
         sx={{

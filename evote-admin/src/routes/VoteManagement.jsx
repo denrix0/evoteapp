@@ -12,7 +12,6 @@ import FormGroup from "@mui/material/FormGroup";
 import TextField from "@mui/material/TextField";
 
 export default function VoteManagement() {
-  // const [data, setData] = useState([]);
   const [voteConfig, setVoteConfig] = useState({});
 
   const defaultValues = {
@@ -20,6 +19,16 @@ export default function VoteManagement() {
     prompt: "Loading",
     options: "Loading",
   };
+
+  const defaultData = [
+    { name: "Option 1", votes: 50 },
+    { name: "Option 2", votes: 150 },
+    { name: "Option 3", votes: 30 },
+    { name: "Option 4", votes: 200 },
+    { name: "Option 5", votes: 290 },
+  ];
+
+  const [data, setData] = useState(defaultData);
 
   const [formValues, setFormValues] = useState(defaultValues);
 
@@ -88,35 +97,28 @@ export default function VoteManagement() {
   useEffect(() => {
     voteConfigRequest({ type: "fetch" });
 
-    // const fetchData = async () => {
-    //   fetch("https://localhost:5000/mgmt_page")
-    //     .then((res) => res.json())
-    //     .then((json) => {
-    //       var poll = [];
+    const fetchData = async () => {
+      fetch("https://localhost:5000/mgmt_page")
+        .then((res) => res.json())
+        .then((json) => {
+          var poll = [];
 
-    //       Object.entries(json).map(([key, value]) => {
-    //         poll.push({ name: key, votes: value });
-    //       });
+          Object.entries(json).forEach(([key, value]) => {
+            poll.push({ name: key, votes: value });
+          });
 
-    //       setData(poll);
-    //     });
-    // };
+          setData(poll);
+        });
+    };
 
-    //   const interv = setInterval(() => {
-    //     // fetchData();
-    //   }, 5000);
+    const interv = setInterval(() => {
+      fetchData();
+    }, 5000);
 
-    //   // fetchData();
+    fetchData();
 
-    //   return () => clearInterval(interv);
+    return () => clearInterval(interv);
   }, []);
-
-  const data = [
-    { name: "Option 1", votes: 50 },
-    { name: "Option 2", votes: 150 },
-    { name: "Option 3", votes: 30 },
-    { name: "Option 4", votes: 200 },
-  ];
 
   //TODO: Set chart to normal Options
 
@@ -124,12 +126,26 @@ export default function VoteManagement() {
     <Grid container>
       <Grid item>
         <CompWindow title={"Poll Chart"}>
-          <BarChart width={500} height={400} data={data}>
+          <BarChart
+            width={data.length * 130}
+            height={600}
+            data={data}
+            margin={{ top: 50, left: 0, bottom: 10, right: 50 }}
+          >
             <XAxis dataKey="name" />
             <YAxis />
-            <Bar dataKey="votes" fill="#8884d8" />
+            <Bar
+              dataKey="votes"
+              barSize={80}
+              fill="#98D6EA"
+              stroke="#000000"
+              strokeWidth={1}
+              label
+            />
           </BarChart>
         </CompWindow>
+      </Grid>
+      <Grid item>
         <CompWindow title={"Vote Control"}>
           <Stack
             direction="row"
@@ -174,12 +190,10 @@ export default function VoteManagement() {
             </Stack>
           </Stack>
         </CompWindow>
-      </Grid>
-      <Grid item>
         <CompWindow title={"Voting Configuration"}>
-          <Stack orientation="column">
+          <Stack orientation="column" width={500}>
             <FormControl>
-              <FormGroup row>
+              <FormGroup>
                 <TextField
                   id="expiry-input"
                   name="expiry"
@@ -198,6 +212,8 @@ export default function VoteManagement() {
                     name="prompt"
                     label="Prompt"
                     type="text"
+                    multiline
+                    rows={2}
                     value={formValues.prompt}
                     onChange={handleInputChange}
                     sx={{
@@ -210,7 +226,7 @@ export default function VoteManagement() {
                     name="options"
                     label="Options"
                     multiline
-                    rows={5}
+                    rows={6}
                     type="text"
                     value={formValues.options}
                     onChange={handleInputChange}

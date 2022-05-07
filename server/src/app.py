@@ -1,22 +1,22 @@
-import config
+import src.config as config
 import brownie
 
 from flask import Flask, jsonify, request
 from flask_restful import Resource, Api, reqparse
 from flask_cors import CORS
-from database_handling.mongodb_wrapper import MongoAPI
-from database_handling.sql_handling import db, VoteCfg
-from function_kit.brownie_functions import brownie_run, check_vote, store_voter_ids
-from function_kit.authentication import (
+from src.database_handling.mongodb_wrapper import MongoAPI
+from src.database_handling.sql_handling import db, VoteCfg
+from src.function_kit.brownie_functions import brownie_run, check_vote, store_voter_ids
+from src.function_kit.exceptions import APIException
+from src.function_kit.authentication import (
     AuthType,
-    AuthenticationException,
     JWT,
     JWTStatus,
     authenticate_login,
     validate_totp,
     validate_uid,
 )
-from function_kit.crypto_functions import (
+from src.function_kit.crypto_functions import (
     AESKey,
     RSAKey,
     get_random,
@@ -45,16 +45,10 @@ with app.app_context():
     db.create_all()
 
 
-class Home(Resource):
-    def get(self):
-        VoteCfg.fetch_config()
-        return jsonify({"message": "Nothing to see here"})
-
-
 class Login(Resource):
     def post(self):
         parser = reqparse.RequestParser()
-        parser.argument("id")
+        parser.add_argument("id")
         parser.add_argument("pin")
         argsr = parser.parse_args()
 
@@ -65,18 +59,16 @@ class Login(Resource):
 
         try:
             if not id.isdigit() or (" " in id):
-                raise AuthenticationException("invalid_id", "The ID is invalid")
+                raise APIException("invalid_id", "The ID is invalid")
 
             if (len(pin) < 8) or (" " in pin):
-                raise AuthenticationException("invalid_pin", "The pin is invalid")
+                raise APIException("invalid_pin", "The pin is invalid")
 
             if not vote_config["ongoing"]:
-                raise AuthenticationException(
-                    "no_vote", "There is no vote ongoing as of now"
-                )
+                raise APIException("no_vote", "There is no vote ongoing as of now")
 
             if check_vote(id):
-                raise AuthenticationException(
+                raise APIException(
                     "already_voted", "There is already a vote cast from this ID"
                 )
 
@@ -87,12 +79,12 @@ class Login(Resource):
 
                 if response == JWTStatus.expired:
                     mongo.delete_user_data(id)
-                    raise AuthenticationException(
+                    raise APIException(
                         "session_expired",
                         "Session has expired. Please log in again.",
                     )
                 elif response == JWTStatus.verified:
-                    raise AuthenticationException(
+                    raise APIException(
                         "already_active",
                         "This user is currently logged in.",
                     )
@@ -100,7 +92,7 @@ class Login(Resource):
             auth, message = authenticate_login(id, pin)
 
             if not auth:
-                raise AuthenticationException("auth_error", message)
+                raise APIException("auth_error", message)
 
             pvt, pub = RSAKey.generate()
             jwt = JWT.generate(id)
@@ -112,7 +104,7 @@ class Login(Resource):
                 "pub_key": pub,
             }
 
-        except AuthenticationException as e:
+        except APIException as e:
             response = {"error_type": e.code, "message": e.message}
 
         # JSON to return
@@ -142,12 +134,10 @@ class Auth(Resource):
             pvt_key = mongo.fetch_user_data(id, data="msg_key")
 
             if not vote_config["ongoing"]:
-                raise AuthenticationException(
-                    "no_vote", "There is no vote ongoing as of now"
-                )
+                raise APIException("no_vote", "There is no vote ongoing as of now")
 
             if not pvt_key:
-                raise AuthenticationException("user_error", "User does not Exist")
+                raise APIException("user_error", "User does not Exist")
 
             if response == JWTStatus.verified:
                 key = RSAKey.decrypt(msg=key, pvt_pem=pvt_key)
@@ -164,24 +154,22 @@ class Auth(Resource):
                         AuthType.TOTP2,
                     ]:
                         if len(auth_content) != 6:
-                            raise AuthenticationException(
-                                "otp_error", "OTP is of invalid length"
-                            )
+                            raise APIException("otp_error", "OTP is of invalid length")
 
                         if not auth_content.isdigit():
-                            raise AuthenticationException(
+                            raise APIException(
                                 "otp_error", "OTP must only contain numbers"
                             )
 
                         if " " in auth_content:
-                            raise AuthenticationException(
+                            raise APIException(
                                 "otp_error", "OTP must not contain spaces"
                             )
 
                         authenticated = validate_totp(id, auth_type, auth_content)
                     elif auth_type == AuthType.UID:
                         if " " in auth_content:
-                            raise AuthenticationException(
+                            raise APIException(
                                 "uid_error", "UID must not contain spaces"
                             )
 
@@ -200,18 +188,14 @@ class Auth(Resource):
                             "token": AESKey.encrypt(new_token, key=key, iv=iv),
                         }
                     else:
-                        raise AuthenticationException(
-                            "auth_failed", "Authentication Failed"
-                        )
+                        raise APIException("auth_failed", "Authentication Failed")
                 else:
-                    raise AuthenticationException(
+                    raise APIException(
                         "invalid_method", "Invalid Authentication Method"
                     )
             else:
-                raise AuthenticationException(
-                    "token_invalid", "Invalid Authorization Token"
-                )
-        except AuthenticationException as e:
+                raise APIException("token_invalid", "Invalid Authorization Token")
+        except APIException as e:
             response = {
                 "error_type": e.code,
                 "message": e.message,
@@ -269,17 +253,15 @@ class SubmitVote(Resource):
 
         try:
             if check_vote(id):
-                raise AuthenticationException(
+                raise APIException(
                     "already_voted", "There is already a vote cast from this id"
                 )
 
             if not vote_config["ongoing"]:
-                raise AuthenticationException(
-                    "no_vote", "There is no vote ongoing as of now"
-                )
+                raise APIException("no_vote", "There is no vote ongoing as of now")
 
             if not pvt_key:
-                raise AuthenticationException("user_error", "User does not Exist")
+                raise APIException("user_error", "User does not Exist")
 
             if response == JWTStatus.verified:
                 key = RSAKey.decrypt(msg=key, pvt_pem=pvt_key)
@@ -295,9 +277,7 @@ class SubmitVote(Resource):
                 )
 
                 if option not in vote_config["options"]:
-                    raise AuthenticationException(
-                        "invaid_option", "That is an invalid option."
-                    )
+                    raise APIException("invaid_option", "That is an invalid option.")
 
                 if token == master_token:
                     store_voter_ids(id)
@@ -308,15 +288,11 @@ class SubmitVote(Resource):
                         "message": "The vote has been cast successfully",
                     }
                 else:
-                    raise AuthenticationException(
-                        "bad_token", "Master token does not match"
-                    )
+                    raise APIException("bad_token", "Master token does not match")
             else:
-                raise AuthenticationException(
-                    "token_invalid", "Invalid Authorization Token"
-                )
+                raise APIException("token_invalid", "Invalid Authorization Token")
 
-        except AuthenticationException as e:
+        except APIException as e:
             response = {
                 "error_type": e.code,
                 "message": e.message,
@@ -326,19 +302,8 @@ class SubmitVote(Resource):
         return jsonify(response)
 
 
-api.add_resource(Home, "/")
 api.add_resource(Auth, "/auth_verify")
 api.add_resource(Login, "/login")
 api.add_resource(GetVoteForm, "/vote_form")
 api.add_resource(SubmitVote, "/submit")
 api.add_resource(VoteStatus, "/vote_status")
-
-
-if __name__ == "__main__":
-    context = (
-        str((config.basedir / "ssl_stuff" / "server.crt").resolve()),
-        str((config.basedir / "ssl_stuff" / "server.key").resolve()),
-    )
-    app.run(
-        debug=True, host=config.SERVER_URI, port=config.SERVER_PORT, ssl_context=context
-    )

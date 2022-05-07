@@ -1,8 +1,8 @@
-import config
+import src.config as config
 from flask import Flask, jsonify, request
 from flask_restful import Resource, Api, reqparse
 from flask_cors import CORS
-from database_handling.sql_handling import db, VoteCfg, VoteUser
+from src.sql_handling import db, VoteCfg, VoteUser
 
 app = Flask(__name__)
 api = Api(app)
@@ -15,6 +15,15 @@ app.secret_key = config.SQL_SECRET
 db.init_app(app)
 with app.app_context():
     db.create_all()
+
+
+class APIException(Exception):
+    def __init__(self, code, message):
+        self.code = code
+        self.message = message
+
+    def __str__(self) -> str:
+        return self.message
 
 
 class VoteConfigAPI(Resource):
@@ -44,11 +53,13 @@ class VoteConfigAPI(Resource):
                     VoteCfg.edit_config(str(data["property"]), str(data["value"]))
                     response["message"] = "Property has been edited"
                 else:
-                    response["message"] = "Invalid Property"
+                    raise APIException("property_invalid", "Invalid Property")
             else:
-                response["message"] = "Invalid Request Type"
+                raise APIException("unknown_tpye", "Invalid Request Type")
+        except APIException as e:
+            response = {"error_type": e.code, "message": e.message}
         except:
-            response["message"] = "Invalid Request"
+            response = {"error_type": "unknown", "message": "Something happened"}
 
         return jsonify(response)
 
@@ -67,6 +78,14 @@ class VoteUserAPI(Resource):
 
         try:
             if req_type == "add":
+                if not data["id"].isdigit():
+                    raise APIException("invalid_id", "Invalid User ID")
+
+                if len(data["pin"]) < 8:
+                    raise APIException(
+                        "invalid_pin", "PIN Must be longer than 8 characters"
+                    )
+
                 VoteUser.add_entry(
                     id=data["id"],
                     pin=data["pin"],
@@ -79,27 +98,16 @@ class VoteUserAPI(Resource):
                     VoteUser.delete_entry(data["id"])
                     response["message"] = "User deleted"
                 else:
-                    response["message"] = "Error deleting user"
+                    raise APIException("no_user", "User by that ID doesn't exist")
             else:
-                response["message"] = "Invalid Request Type"
+                raise APIException("unknown_tpye", "Invalid Request Type")
+        except APIException as e:
+            response = {"error_type": e.code, "message": e.message}
         except:
-            response["message"] = "Invalid Request"
+            response = {"error_type": "unknown", "message": "Something happened"}
 
         return jsonify(response)
 
 
 api.add_resource(VoteConfigAPI, "/config")
 api.add_resource(VoteUserAPI, "/users")
-
-
-if __name__ == "__main__":
-    context = (
-        str((config.basedir / "ssl_stuff" / "server.crt").resolve()),
-        str((config.basedir / "ssl_stuff" / "server.key").resolve()),
-    )
-    app.run(
-        debug=True,
-        host=config.WEBUI_SERVER_URI,
-        port=config.WEBUI_SERVER_PORT,
-        ssl_context=context,
-    )

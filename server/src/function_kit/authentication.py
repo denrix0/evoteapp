@@ -1,14 +1,14 @@
 from enum import Enum
-from database_handling.sql_handling import VoteUser
+from src.database_handling.sql_handling import VoteUser, VoteCfg
 
-import function_kit.crypto_functions as cryp
+import src.function_kit.crypto_functions as cryp
 import pyotp
 import jwt
-import config
+import src.config as config
 import time
 
 
-token_time = lambda: int(time.time() + config.vote_config.expiry)
+token_time = lambda: int(time.time() + int(VoteCfg.fetch_config()["expiry"]))
 
 
 class AuthType(Enum):
@@ -21,15 +21,6 @@ class JWTStatus(Enum):
     failed = 0
     expired = 1
     verified = 2
-
-
-class AuthenticationException(Exception):
-    def __init__(self, code, message):
-        self.code = code
-        self.message = message
-
-    def __str__(self) -> str:
-        return self.message
 
 
 def authenticate_login(id, pin):

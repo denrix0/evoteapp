@@ -2,7 +2,7 @@ import pickle
 import ast
 
 from flask_sqlalchemy import SQLAlchemy
-from function_kit.crypto_functions import PinHash, ServerKey
+from src.crypto_functions import PinHash, ServerKey
 
 db = SQLAlchemy()
 

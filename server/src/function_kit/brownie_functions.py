@@ -1,7 +1,7 @@
 import json
 import brownie
 
-from config import basedir
+from src.config import basedir
 
 
 def brownie_run(method, kwargs={}):

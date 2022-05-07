@@ -49,12 +49,17 @@
 # Python Venv and Brownie
 /server/votestorage/build
 /server/venv
+/server/.vscode
+/webuiserver/venv
+/webuiserver/.vscode
+
 
 # Random Files
 /server/brownie_dump.json
 /server/voter_dump.json
 /server/voterid/secrets.json
 /server/ssl_stuff
+/webuiserver/ssl_stuff
 
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 

@@ -1,5 +1,5 @@
 import secrets
-import config
+import src.config as config
 
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.hazmat.primitives.asymmetric import rsa, padding

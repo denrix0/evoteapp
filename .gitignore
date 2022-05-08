@@ -53,6 +53,9 @@
 /webuiserver/venv
 /webuiserver/.vscode
 
+# General
+/builds/
+
 
 # Random Files
 /server/brownie_dump.json

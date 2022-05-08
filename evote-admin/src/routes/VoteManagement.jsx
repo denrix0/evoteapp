@@ -75,7 +75,12 @@ export default function VoteManagement() {
         value: status,
       },
     });
-    setTimeout(() => voteConfigRequest({ type: "fetch" }), 1000);
+    setTimeout(() => voteConfigRequest({ type: "fetch" }), 2000);
+  };
+
+  const setDefaults = () => {
+    voteConfigRequest({ type: "reset" });
+    setTimeout(() => voteConfigRequest({ type: "fetch" }), 2000);
   };
 
   const updateVoteConfig = () => {
@@ -91,7 +96,7 @@ export default function VoteManagement() {
         },
       });
     });
-    setTimeout(() => voteConfigRequest({ type: "fetch" }), 1000);
+    setTimeout(() => voteConfigRequest({ type: "fetch" }), 2000);
   };
 
   useEffect(() => {
@@ -245,6 +250,14 @@ export default function VoteManagement() {
               onClick={() => updateVoteConfig()}
             >
               Update
+            </Button>
+            <Button
+              size="large"
+              variant="contained"
+              sx={{ margin: "1em" }}
+              onClick={() => setDefaults()}
+            >
+              Reset Settings
             </Button>
           </Stack>
         </CompWindow>

@@ -203,3 +203,4 @@ User data
 - [ ] Make Auth Methods Selectable
 - [ ] Better way of buffering voters
 - [ ] Implement Login Attempt Limiting
+- [x] Add set defaults button

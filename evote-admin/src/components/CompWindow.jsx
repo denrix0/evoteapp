@@ -1,10 +1,31 @@
+import { useEffect, useState } from "react";
 import Box from "@mui/material/Box";
 import Divider from "@mui/material/Divider";
 import Typography from "@mui/material/Typography";
 
 const CompWindow = ({ title, children }) => {
+  const [userType, setUserType] = useState("");
+  const server = localStorage.getItem("serverIp");
+
+  useEffect(() => {
+    const getUserType = () => {
+      return fetch(server + "/")
+        .then((res) => {
+          if (res.ok) {
+            return res.json();
+          }
+          throw new Error("Something went wrong");
+        })
+        .then((json) => {
+          setUserType(json.user_type);
+        });
+    };
+
+    getUserType();
+  }, [server]);
+
   if (
-    process.env.REACT_APP_SQL_USER === "owner" ||
+    userType === "evote_owner" ||
     title === "Poll Chart" ||
     title === "Create User" ||
     title === "Delete User"

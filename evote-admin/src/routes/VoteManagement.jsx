@@ -13,6 +13,7 @@ import TextField from "@mui/material/TextField";
 
 export default function VoteManagement() {
   const [voteConfig, setVoteConfig] = useState({});
+  const server = localStorage.getItem("serverIp");
 
   const defaultValues = {
     expiry: "Loading",
@@ -38,11 +39,10 @@ export default function VoteManagement() {
       ...formValues,
       [name]: value,
     });
-    console.log(formValues);
   };
 
   const voteConfigRequest = async (content) => {
-    fetch("https://localhost:7789/config", {
+    fetch(server + "/config", {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -50,9 +50,13 @@ export default function VoteManagement() {
       },
       body: JSON.stringify(content),
     })
-      .then((response) => response.json())
+      .then((res) => {
+        if (res.ok) {
+          return res.json();
+        }
+        throw new Error("Something went wrong");
+      })
       .then((json) => {
-        console.log(typeof json.data.options);
         if (content.type === "fetch") {
           setVoteConfig(json.data);
           setFormValues({
@@ -103,8 +107,13 @@ export default function VoteManagement() {
     voteConfigRequest({ type: "fetch" });
 
     const fetchData = async () => {
-      fetch("https://localhost:5000/mgmt_page")
-        .then((res) => res.json())
+      fetch(server + "/vote_status")
+        .then((res) => {
+          if (res.ok) {
+            return res.json();
+          }
+          throw new Error("Something went wrong");
+        })
         .then((json) => {
           var poll = [];
 
@@ -113,6 +122,9 @@ export default function VoteManagement() {
           });
 
           setData(poll);
+        })
+        .catch((error) => {
+          console.error(error);
         });
     };
 
@@ -123,7 +135,7 @@ export default function VoteManagement() {
     fetchData();
 
     return () => clearInterval(interv);
-  }, []);
+  }, [server]);
 
   //TODO: Set chart to normal Options
 

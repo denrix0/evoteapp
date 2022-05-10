@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useEffect, useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -7,13 +7,33 @@ import Button from "@mui/material/Button";
 import ButtonGroup from "@mui/material/ButtonGroup";
 import { Link, useLocation } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
+import TextField from "@mui/material/TextField";
 
 const ResponsiveAppBar = () => {
   const location = useLocation().pathname;
-  const userToName = {
-    node: "NODE",
-    owner: "OWNER",
-  };
+  const [userType, setUserType] = useState("");
+  const [serverIp, setServerIp] = useState("");
+  const server = localStorage.getItem("serverIp");
+
+  useEffect(() => {
+    const getUserType = () => {
+      return fetch(server + "/")
+        .then((res) => {
+          if (res.ok) {
+            return res.json();
+          }
+          throw new Error("Something went wrong");
+        })
+        .then((json) => {
+          const tempSwap = { evote_node: "NODE", evote_owner: "OWNER" };
+          setUserType(tempSwap[json.user_type]);
+        })
+        .catch((error) => {
+          setUserType("Not Connected to a Node");
+        });
+    };
+    getUserType();
+  }, [server]);
 
   return (
     <AppBar position="static" sx={{ backgroundColor: "#251D3A" }}>
@@ -54,6 +74,28 @@ const ResponsiveAppBar = () => {
             })}
           </ButtonGroup>
         </Box>
+        <TextField
+          id="options-input"
+          name="options"
+          multiline
+          type="text"
+          size="small"
+          defaultValue={localStorage.getItem("serverIp")}
+          onChange={(e) => setServerIp(e.target.value)}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "white",
+            },
+          }}
+        />
+        <Button
+          variant="contained"
+          size="large"
+          sx={{ marginX: "1em" }}
+          onClick={() => localStorage.setItem("serverIp", serverIp)}
+        >
+          Connect
+        </Button>
         <Paper elevation={12}>
           <Typography
             variant="h6"
@@ -64,7 +106,7 @@ const ResponsiveAppBar = () => {
               fontWeight: "bold",
             }}
           >
-            {userToName[process.env.REACT_APP_SQL_USER]}
+            {userType}
           </Typography>
         </Paper>
       </Toolbar>

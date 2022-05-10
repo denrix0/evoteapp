@@ -16,6 +16,7 @@ import Divider from "@mui/material/Divider";
 export default function UserPage() {
   const [delId, setDelId] = useState("");
   const [showPassword, setShow] = useState(false);
+  const server = localStorage.getItem("serverIp");
 
   const randomBase32 = () => {
     const charArry = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567".split("");
@@ -39,21 +40,16 @@ export default function UserPage() {
     `otpauth://totp/EVOTEAPP:Account?secret=${secret}&issuer=EVOTEAPP`;
 
   const voteUserRequest = async (content) => {
-    fetch("https://localhost:7789/users", {
+    fetch(server + "/users", {
       method: "POST",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
       body: JSON.stringify(content),
-    })
-      .then((response) => response.json())
-      .then((json) => {
-        console.log(json.message);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+    }).catch((error) => {
+      console.error(error);
+    });
   };
 
   const handleInputChange = (e) => {
@@ -62,7 +58,6 @@ export default function UserPage() {
       ...formValues,
       [name]: value,
     });
-    console.log(formValues);
   };
 
   return (

@@ -1,4 +1,5 @@
 import src.config as config
+import requests
 from flask import Flask, jsonify, request
 from flask_restful import Resource, Api, reqparse
 from flask_cors import CORS
@@ -26,6 +27,11 @@ class APIException(Exception):
         return self.message
 
 
+class Home(Resource):
+    def get(self):
+        return jsonify({"user_type": config.SQL_USER})
+
+
 class VoteConfigAPI(Resource):
     def post(self):
         parser = reqparse.RequestParser()
@@ -46,9 +52,13 @@ class VoteConfigAPI(Resource):
                 response["message"] = "Query success. Fetched Vote Configuration"
                 response["data"] = VoteCfg.fetch_config()
             elif req_type == "reset":
+                if config.SQL_USER != "evote_owner":
+                    raise APIException("not_owner", "Cannot Modify Config, Not owner")
                 VoteCfg.set_defaults()
                 response["message"] = "Vote configuration has been reset"
             elif req_type == "edit":
+                if config.SQL_USER != "evote_owner":
+                    raise APIException("not_owner", "Cannot Modify Config, Not owner")
                 if data["property"] in list(VoteCfg.fetch_config()):
                     VoteCfg.edit_config(str(data["property"]), str(data["value"]))
                     response["message"] = "Property has been edited"
@@ -109,5 +119,14 @@ class VoteUserAPI(Resource):
         return jsonify(response)
 
 
+class VoteStatus(Resource):
+    def get(self):
+        return requests.get(
+            "https://127.0.0.1:" + config.SERVER_PORT + "/vote_status", verify=False
+        ).json()
+
+
+api.add_resource(Home, "/")
 api.add_resource(VoteConfigAPI, "/config")
 api.add_resource(VoteUserAPI, "/users")
+api.add_resource(VoteStatus, "/vote_status")

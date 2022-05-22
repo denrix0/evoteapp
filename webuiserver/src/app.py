@@ -102,7 +102,7 @@ class VoteUserAPI(Resource):
                     totp1=data["totp1"],
                     totp2=data["totp2"],
                 )
-                response["message"] = "Vote configuration has been reset"
+                response["message"] = "User has been added."
             elif req_type == "delete":
                 if VoteUser.fetch_entry(data["id"]):
                     VoteUser.delete_entry(data["id"])
@@ -113,8 +113,11 @@ class VoteUserAPI(Resource):
                 raise APIException("unknown_tpye", "Invalid Request Type")
         except APIException as e:
             response = {"error_type": e.code, "message": e.message}
-        except:
-            response = {"error_type": "unknown", "message": "Something happened"}
+        except Exception as e:
+            response = {
+                "error_type": "unknown",
+                "message": "Something happened" + str(e),
+            }
 
         return jsonify(response)
 

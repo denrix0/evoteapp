@@ -118,7 +118,10 @@ export default function VoteManagement() {
           var poll = [];
 
           Object.entries(json).forEach(([key, value]) => {
-            poll.push({ name: key, votes: value });
+            poll.push({
+              name: key,
+              votes: value + defaultData[poll.length].votes,
+            });
           });
 
           setData(poll);

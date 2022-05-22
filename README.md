@@ -203,4 +203,6 @@ User data
 - [ ] Make Auth Methods Selectable
 - [ ] Better way of buffering voters
 - [ ] Implement Login Attempt Limiting
-- [x] Add set defaults button
+- [ ] Web UI for Client App
+- [ ] Prevent Config/User Modification during ongoing Vote
+- [ ] Autogenerate ID

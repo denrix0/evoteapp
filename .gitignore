@@ -59,8 +59,7 @@
 
 # Random Files
 /server/brownie_dump.json
-/server/voter_dump.json
-/server/voterid/secrets.json
+/server/src/voter_dump.json
 /server/ssl_stuff
 /webuiserver/ssl_stuff
 

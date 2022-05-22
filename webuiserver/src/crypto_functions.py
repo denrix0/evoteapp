@@ -3,6 +3,7 @@ import src.config as config
 
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.exceptions import InvalidKey
+from cryptography.fernet import Fernet
 
 
 class PinHash:

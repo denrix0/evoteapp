@@ -272,6 +272,13 @@ class SubmitVote(Resource):
 
                 tokens = mongo.fetch_user_data(id=id, data="auth_tokens")
 
+                for token in [tokens["uid"], tokens["totp1"], tokens["totp2"]]:
+                    if len(token) < 64:
+                        raise APIException(
+                            "invalid_token",
+                            "Some tokens may not be generated or invalid",
+                        )
+
                 master_token = generate_master_token(
                     uid=tokens["uid"], totp1=tokens["totp1"], totp2=tokens["totp2"]
                 )

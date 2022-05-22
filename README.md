@@ -199,6 +199,7 @@ User data
    ```
 ## Todo
 - [ ] Fix UID Auth
+- [ ] Store ID and return token of UID Auth in some table probably???
 - [ ] Authorize Nodes on the Blockchain
 - [ ] Make Auth Methods Selectable
 - [ ] Better way of buffering voters

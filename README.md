@@ -1,5 +1,12 @@
 # Electronic Voting System
 
+## Screenshots
+### App
+![](images/app.png?raw=true)
+### User Management
+![](images/userconfig.png?raw=true)
+### Vote Configuration
+![](images/voteconfig.png?raw=true)
 
 ## Tech Stacks?
 - Android App
@@ -199,6 +206,7 @@ User data
    ```
 ## Todo
 - [ ] Fix UID Auth
+- [ ] Hash PIN client side as well?
 - [ ] Store ID and return token of UID Auth in some table probably???
 - [ ] Authorize Nodes on the Blockchain
 - [ ] Make Auth Methods Selectable
